@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using UIKit;
 using UserNotifications;
+using Xamarin.Forms;
 
 namespace VikRuse
 {
@@ -30,6 +31,8 @@ namespace VikRuse
             }
         }
 
+       
+
         public EmployeeCell (IntPtr handle) : base (handle)
         {
 
@@ -37,6 +40,7 @@ namespace VikRuse
 
         public void UpdateCell(Customer currentEmployee)
         {
+
             BillNumber.Text = currentEmployee.Nomer;
 
             Address.Text = currentEmployee.Address;
@@ -45,26 +49,68 @@ namespace VikRuse
 
             MoneyToPayLabel.Text = "дължима сума: ";
 
-            MoneyToPayValue.Text = currentEmployee.MoneyToPay.ToString();
+            MoneyToPayValue.Text = currentEmployee.MoneyToPay.ToString("N2") + " лв";
 
             EnddateLabel.Text = "срок за плащане: ";
 
-            EnddateValue.Text = currentEmployee.EndPayDate.ToString();
+            EnddateValue.Text = currentEmployee.EndPayDate.ToShortDateString();
 
             OldBillLabel.Text = "старо задължение";
 
-            OldBillLValue.Text = currentEmployee.OldBill.ToString();
+            OldBillLValue.Text = currentEmployee.OldBill.ToString("N2") +" лв";
 
             ReportDateLabel.Text = "дата на отчитане: ";
 
-            ReportDateValue.Text = currentEmployee.StartReportDate.ToString();
+            if (currentEmployee.StartReportDate == DateTime.MinValue)
+            {
+                ReportDateValue.Text = "Не е зададен график.";
+            }
+            else
+            {
+                ReportDateValue.Text =
+                             currentEmployee.StartReportDate.ToShortDateString() + " " +
+                             currentEmployee.StartReportDate.ToShortTimeString() + "-" +
+                             currentEmployee.EndReportDate.ToShortTimeString();
+            }
+
+
+
+            if (currentEmployee.ReceiveNotifyInvoiceOverdueToday == true)
+            {
+                MoneyToPayValue.TextColor = UIColor.Red.ColorWithAlpha(alpha: 0.8f);
+
+                EnddateValue.TextColor = (UIColor.Red);
+            }
+            else if (currentEmployee.ReceiveNotifyInvoiceOverdueToday == false)
+            {
+                MoneyToPayValue.TextColor = UIColor.Green.ColorWithAlpha(0.8f);
+            }
+
+            if (currentEmployee.MoneyToPay == 0)
+            {
+                MoneyToPayValue.TextColor = (UIColor.Black);
+            }
+
+            if (currentEmployee.ReciveNotifyReadingToday == true)
+            {
+                ReportDateValue.TextColor = (UIColor.Red);
+            }
+            if (currentEmployee.ReceiveNotifyNewInvoiceToday == true)
+            {
+                MoneyToPayValue.TextColor = UIColor.Green.ColorWithAlpha(0.8f);
+            }
+
+
+            //  ReportDateValue.Text = currentEmployee.StartReportDate.ToString();
+
+
 
             //DeleteButton = DeleteBtn;
 
             //EditButton = EditButton;
 
-          //  EditButton.TouchInside += (object sender, EventArgs e) => { };
-     
+            //  EditButton.TouchInside += (object sender, EventArgs e) => { };
+
             //var gradientLayer = new CAGradientLayer();
             ////#01579b, #3187cb
             //gradientLayer.Colors = new[] { UIColor.Red.CGColor, UIColor.Blue.CGColor };

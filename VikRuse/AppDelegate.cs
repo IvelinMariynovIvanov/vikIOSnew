@@ -73,6 +73,8 @@ namespace VikRuse
            // return base.FinishedLaunching(application, launchOptions);
         }
 
+        
+
         void RegisterForNotifications()
         {
             // Create action
@@ -91,12 +93,11 @@ namespace VikRuse
             var categories = new UNNotificationCategory[] { category };
             UNUserNotificationCenter.Current.SetNotificationCategories(new NSSet<UNNotificationCategory>(categories));
 
-            UNUserNotificationCenter.Current.RequestAuthorization(UNAuthorizationOptions.Alert
-                                                                  | UNAuthorizationOptions.Badge
-                                                                  | UNAuthorizationOptions.Sound,
-                                                                  (a, err) => {
-                                                              //TODO handle error
-                                                          });
+            UNUserNotificationCenter.Current.RequestAuthorization(UNAuthorizationOptions.Alert|UNAuthorizationOptions.Badge| UNAuthorizationOptions.Sound,
+            (a, err) => 
+            {
+             //TODO handle error
+            });
         }
 
         void ScheduleNotification()
@@ -117,7 +118,7 @@ namespace VikRuse
             var request = UNNotificationRequest.FromIdentifier(requestID, content, trigger);
 
             //Here I set the Delegate to handle the user tapping on notification
-            UNUserNotificationCenter.Current.Delegate = new UserNotificationCenterDelegate();
+         //   UNUserNotificationCenter.Current.Delegate = new UserNotificationCenterDelegate();
 
             UNUserNotificationCenter.Current.AddNotificationRequest(request, (err) => {
                 if (err != null)

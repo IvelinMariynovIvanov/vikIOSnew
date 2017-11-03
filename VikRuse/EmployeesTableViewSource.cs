@@ -6,6 +6,7 @@ using CoreGraphics;
 using CoreAnimation;
 using System.IO;
 using Newtonsoft.Json;
+using System.Globalization;
 
 namespace VikRuse
 {
@@ -105,6 +106,8 @@ namespace VikRuse
 
         public override UITableViewCell GetCell(UITableView tableView, NSIndexPath indexPath)
         {
+            CultureInfo.DefaultThreadCurrentCulture = new CultureInfo("bg-BG");
+
             EmployeeCell cell = (EmployeeCell)tableView.DequeueReusableCell("Custom_Cell", indexPath);
 
             Customer currentEmployee = mEmployees[indexPath.Row];
@@ -118,15 +121,44 @@ namespace VikRuse
             //assign action
             cell.DeleteBtn.TouchUpInside += (sender, e) =>
             {
-                var row = ((UIButton)sender).Tag;
-                var currentCustomer = mEmployees[indexPath.Row];
+             //Create Alert
+             var confirmCustomerDelete = UIAlertController.Create("Потвърждавате ли изтриването ?", 
+                                                                     $"Изтрий клиент " +
+                                                                     $"{currentEmployee.FullName.ToString()}",
+                                                                      UIAlertControllerStyle.Alert);
 
-                mEmployees.RemoveAt((int)row);
+             //Add Actions to alert
+             confirmCustomerDelete.AddAction(UIAlertAction.Create("OK", UIAlertActionStyle.Default, alert =>
+             {
+                 var row = ((UIButton)sender).Tag;
+                 var currentCustomer = mEmployees[indexPath.Row];
 
-                var listOfCustomersAsJson = JsonConvert.SerializeObject(this.mEmployees);
-                File.WriteAllText(mFilename, listOfCustomersAsJson);
+                 mEmployees.RemoveAt((int)row);
 
-                tableView.ReloadData();
+                 var listOfCustomersAsJson = JsonConvert.SerializeObject(this.mEmployees);
+
+                 File.WriteAllText(mFilename, listOfCustomersAsJson);
+
+                 tableView.ReloadData();
+             }));
+
+             confirmCustomerDelete.AddAction(UIAlertAction.Create("Cancel", UIAlertActionStyle.Cancel, alert => this.Dispose()));
+
+             //Present Alert
+             navController.PresentViewController(confirmCustomerDelete, true, null);
+             
+
+              
+
+                //if (mEmployees.Count == 0)
+                //{
+                //    this.mViewController.MFullUpdateText.Text = "Моля добавете абонати";
+                //    //ViewController mainScreeen = this.mStoryBoard.InstantiateViewController("ViewController") as ViewController;
+
+                //    //// mainScreeen.MFullUpdateText.Text = "Моля добавете абонати";
+                //    //navController.PushViewController(mainScreeen, true);
+
+                //}
 
             };
 

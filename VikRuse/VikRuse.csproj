@@ -108,6 +108,7 @@
       <DependentUpon>Fragment.cs</DependentUpon>
     </Compile>
     <Compile Include="GeneratePassword.cs" />
+    <Compile Include="GrudMessageFromPreferemces.cs" />
     <Compile Include="Main.cs" />
     <Compile Include="AppDelegate.cs" />
     <None Include="GettingStarted.Xamarin" />

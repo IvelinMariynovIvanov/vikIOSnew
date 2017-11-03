@@ -27,8 +27,11 @@ namespace VikRuse
         private static string mDocuments = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
         private string mNotificationFileName = Path.Combine(mDocuments, "Notification.txt");
 
+        public event EventHandler<OnTapNotificationCustomEventArgs> OnTapNotificationPressed;
 
-        // public event EventHandler<OnTapNotification> OnTapNotificationPressed;
+        private string mHourFileName = Path.Combine(mDocuments, "Hour.txt");
+        private string mDateFileName = Path.Combine(mDocuments, "Date.txt");
+        
 
         public UserNotificationCenterDelegate()
         {
@@ -40,9 +43,18 @@ namespace VikRuse
             this.mStoryboard = storyboard;
             this.mNavigationController = navigationController;
 
-           
+            //this.OnTapNotificationPressed += (object sender, OnTapNotificationCustomEventArgs e) =>
+            //{
+            //    mStoryboard = e.MStoryboard;
+
+            //    mNavigationController = e.MNavigationController;
+
+            //    //var mainActivitiy = mStoryboard.InstantiateViewController("ViewController");
+            //    //this.mNavigationController.PushViewController(mainActivitiy, true);
+
+            //};
         }
-   
+
 
         public override void DidReceiveNotificationResponse(UNUserNotificationCenter center, UNNotificationResponse response, [BlockProxy(typeof(AdAction))] Action completionHandler)
         {
@@ -54,11 +66,11 @@ namespace VikRuse
 
             //string userNotificationDelegateAsJSON = File.ReadAllText(mNotificationFileName);
 
-            //mNotification = JsonConvert.DeserializeObject<UserNotificationCenterDelegate>(userNotificationDelegateAsJSON);
+         //   mNotification = JsonConvert.DeserializeObject<UserNotificationCenterDelegate>(userNotificationDelegateAsJSON);
 
 
             /////////////////
-         //   GetNotificationSavedInPhone();
+            //   GetNotificationSavedInPhone();
 
             //mStoryboard = mNotification.mStoryboard;
 
@@ -68,18 +80,35 @@ namespace VikRuse
             //var mainActivitiy = mStoryboard.InstantiateViewController("ViewController");
             //this.mNavigationController.PushViewController(mainActivitiy, true);
 
-              ViewController navController = new ViewController();
 
-            navController.OnTapNotificationPressed += (object sender, OnTapNotificationCustomEventArgs e) =>
+            //ViewController navController = new ViewController();
+
+            //mStoryboard = navController.MStoryboard;
+
+            //mNavigationController = navController.MNavigationController;
+
+            //navController.OnTapNotificationPressed += (object sender, OnTapNotificationCustomEventArgs e) =>
+            //{
+            //    mStoryboard = e.MStoryboard;
+
+            //    mNavigationController = e.MNavigationController;
+
+            //    //var mainActivitiy = mStoryboard.InstantiateViewController("ViewController");
+            //    //this.mNavigationController.PushViewController(mainActivitiy, true);
+
+            //};
+
+
+            if (OnTapNotificationPressed != null)
             {
-                mStoryboard = e.MStoryboard;
+                OnTapNotificationPressed.Invoke
+                    (this, new OnTapNotificationCustomEventArgs(mStoryboard, mNavigationController));
+            }
 
-                mNavigationController = e.MNavigationController;
 
-                var mainActivitiy = mStoryboard.InstantiateViewController("ViewController");
-                this.mNavigationController.PushViewController(mainActivitiy, true);
 
-            };
+            //var mainActivitiy = mStoryboard.InstantiateViewController("ViewController");   // mStoryboard
+            //this.mNavigationController.PushViewController(mainActivitiy, true);
 
 
             // Take action based on Action ID
@@ -94,8 +123,23 @@ namespace VikRuse
                     {
                         // Handle default action...
 
-                        //var mainActivitiy = this.Storyboard.InstantiateViewController("ViewController");
+
+                        //var mainActivitiy = .InstantiateViewController("ViewController");
                         //this.NavigationController.PushViewController(mainActivitiy, true);
+
+                        DateTime updateHourAndDate = DateTime.Now;
+
+                        string DateFormatt = "HH:mm";
+                        string format = "dd.MM.yyyy";
+
+                        string shortReportDatetHour = updateHourAndDate.ToString(DateFormatt);
+
+
+                       var updateHour = updateHourAndDate.ToString(DateFormatt);  // + " часа, ";
+                       var updateDate = updateHourAndDate.ToString(format);
+
+                        File.WriteAllText(mHourFileName, updateHour);
+                        File.WriteAllText(mDateFileName, updateDate);
                     }
                     else if (response.IsDismissAction)
                     {

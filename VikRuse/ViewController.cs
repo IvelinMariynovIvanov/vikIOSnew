@@ -3,6 +3,7 @@ using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Threading;
 using UIKit;
 using UserNotifications;
 using static VikRuse.OnTapNotificationCustomEventArgs;
@@ -13,25 +14,50 @@ namespace VikRuse
     {
         //public static UIStoryboard Storyboard = UIStoryboard.FromName("MainStoryboard", null);
 
-        public event EventHandler<OnTapNotificationCustomEventArgs> OnTapNotificationPressed;
+      //  public event EventHandler<OnTapNotificationCustomEventArgs> OnTapNotificationPressed;
 
         private static string mDocuments = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
-        private string mFilename = Path.Combine(mDocuments, "Customers.txt");
+        private string mCustomersFilename = Path.Combine(mDocuments, "Customers.txt");
         private string mNotificationFileName = Path.Combine(mDocuments, "Notification.txt");
+        private string mHourFileName = Path.Combine(mDocuments, "Hour.txt");
+        private string mDateFileName = Path.Combine(mDocuments, "Date.txt");
 
         private string mStoryBoardName = Path.Combine(mDocuments, "StoryBoard.txt");
 
+        private List<Customer> mAllUpdateCustomerFromApi = new List<Customer>();
+        private List<Customer> mCustomerFromApiToNotifyToday = new List<Customer>();
         private List<Customer> mCustomers; // = new List<Customer>(); //
+
+        private List<Customer> mCountНotifyReadingustomers = new List<Customer>();
+        private List<Customer> mCountНotifyInvoiceOverdueCustomers = new List<Customer>();
+        private List<Customer> mCountNewНotifyNewInvoiceCustomers = new List<Customer>();
+
         private string listOfCustomersAsJsonString = string.Empty;
         private string categoryID;
 
+        private string mDate1;
+        private string mHour1;
+
         private string storyBoardAsJsonString;
 
-        private UIStoryboard mStoryboard;
+        public UIStoryboard mStoryboard;
 
-        private UINavigationController mNavigationController;
+        public UINavigationController mNavigationController;
 
-   
+        public UIStoryboard MStoryboard { get => mStoryboard; set => mStoryboard = value; }
+        public UINavigationController MNavigationController { get => mNavigationController; set => mNavigationController = value; }
+
+        private string MDate { get => mDate1; set => mDate1 = value; }
+
+        private string MHour { get => mHour1; set => mHour1 = value; }
+
+        public UILabel MFullUpdateText { get => mFullUpdateDateText; set => mFullUpdateDateText = value; }
+
+       // private UILabel MabonatiObnoveniKum { get => mAbonatiObnoveniKum; set => mAbonatiObnoveniKum = value;}
+    
+         
+
+
 
         //private UINavigationBar mBar
         //{
@@ -60,7 +86,33 @@ namespace VikRuse
 
             GetCustomersSavedInPhone();
 
-    
+            if (mCustomers.Count != 0)
+            {
+                //mHour.Text = GetUpdateHour();
+                //mDate.Text = GetUpdateDate();
+
+                MHour = GetUpdateHour();
+                MDate = GetUpdateDate();
+
+                MFullUpdateText.Text = "Абонати обновени към " + MHour + MDate;
+
+            }
+            else
+            {
+                //mHour.Hidden = true;
+                //mDate.Hidden = true;
+                // mObnoveniKum.Visibility = ViewStates.Gone;
+
+                //MHour.Enabled = false;
+                //MDate.Enabled = false;
+                //MabonatiObnoveniKum.Text = "Моля добавете абонати";
+
+                mFullUpdateDateText.Text = "Моля добавете абонати";
+
+
+            }
+
+
             EmployeesTableView.Source = new EmployeesTableViewSource(mCustomers, Storyboard, this, NavigationController);
 
             //   EmployeesTableView.Source = new EmployeesTableViewSource(mCustomers);
@@ -69,26 +121,108 @@ namespace VikRuse
             EmployeesTableView.EstimatedRowHeight = 100f;
             EmployeesTableView.ReloadData();
 
-            if (OnTapNotificationPressed != null)
+
+
+            //if (OnTapNotificationPressed != null)
+            //{
+            //    OnTapNotificationPressed.Invoke
+            //        (this, new OnTapNotificationCustomEventArgs(Storyboard, this.NavigationController));
+            //}
+
+            MStoryboard = this.Storyboard;
+            MNavigationController = this.NavigationController;
+
+
+            //this.OnTapNotificationPressed += (object sender1, OnTapNotificationCustomEventArgs e) =>
+            //{
+            //    MStoryboard = e.MStoryboard;
+
+            //    mNavigationController = e.MNavigationController;
+
+            //    //var mainActivitiy = mStoryboard.InstantiateViewController("ViewController");
+            //    //this.mNavigationController.PushViewController(mainActivitiy, true);
+
+            //};
+        }
+
+        public  string GetUpdateDate()
+        {
+            try
             {
-                OnTapNotificationPressed.Invoke
-                    (this, new OnTapNotificationCustomEventArgs(Storyboard, this.NavigationController));
+                var date = File.ReadAllText(mDateFileName);
+
+                string format = "dd.MM.yyyy";
+
+                if (date == null || date == string.Empty)
+                {
+                    return DateTime.Now.ToString(format);
+                }
+
+                var newDate = date;
+
+                if (newDate == null || newDate == "(null)")
+                {
+                    return DateTime.Now.ToString(format);
+                }
+                return newDate;
+            }
+            catch(Exception e)
+            {
+                string format = "dd.MM.yyyy";
+
+                return DateTime.Now.ToString(format);
             }
         }
 
-        public void OnTapNotification(OnTapNotificationCustomEventArgs e)
+        public  string GetUpdateHour()   
         {
-            if (OnTapNotificationPressed != null)
+            try
             {
-                OnTapNotificationPressed.Invoke(this, new OnTapNotificationCustomEventArgs(Storyboard, this.NavigationController));
+                
+            // read exisiting value
+            var  hour = File.ReadAllText(mHourFileName);
+
+            // if preferences return null, initialize listOfCustomers
+            if (hour == null || hour == string.Empty)
+            {
+                string DateFormatt = "HH:mm";
+
+                return DateTime.Now.ToString(DateFormatt) + " часа, ";
+            }
+
+            var newHour = (hour);
+
+            if (newHour == null || newHour == "(null)")
+            {
+                string DateFormatt = "HH:mm";
+
+                return DateTime.Now.ToString(DateFormatt);
+            }
+
+            return newHour + " часа, ";
+            }
+            catch(Exception e)
+            {
+                string DateFormatt = "HH:mm";
+                return DateTime.Now.ToString(DateFormatt) + " часа, ";
             }
         }
+
+        //public void OnTapNotification(OnTapNotificationCustomEventArgs e)
+        //{
+        //    if (OnTapNotificationPressed != null)
+        //    {
+        //        OnTapNotificationPressed.Invoke(this, new OnTapNotificationCustomEventArgs(Storyboard, this.NavigationController));
+        //    }
+        //}
+
+      
 
         private void GetCustomersSavedInPhone()
         {
             try
             {
-                listOfCustomersAsJsonString = File.ReadAllText(mFilename);
+                listOfCustomersAsJsonString = File.ReadAllText(mCustomersFilename);
 
                 if (listOfCustomersAsJsonString == null || listOfCustomersAsJsonString == string.Empty)
                 {
@@ -147,54 +281,38 @@ namespace VikRuse
 
         partial void SetnNotification(UIButton sender)
         {
-            UserNotificationCenterDelegate userNotificationDelegate =
-               new UserNotificationCenterDelegate(this.Storyboard, this.NavigationController);
 
-            userNotificationDelegate.mStoryboard = this.Storyboard;
-            userNotificationDelegate.mNavigationController = this.NavigationController;
+            //UserNotificationCenterDelegate userNotificationDelegate =
+            //  new UserNotificationCenterDelegate(this.MStoryboard, this.MNavigationController);
 
-            List<UserNotificationCenterDelegate> list = new List<UserNotificationCenterDelegate>();
+            //userNotificationDelegate.mStoryboard = this.Storyboard;
+            //userNotificationDelegate.mNavigationController = this.NavigationController;
 
-            list.Add(userNotificationDelegate);
+            //List<UserNotificationCenterDelegate> list = new List<UserNotificationCenterDelegate>();
 
-            var userNotificationDelegateAsJSON = JsonConvert.SerializeObject(list);
-            File.WriteAllText(mNotificationFileName, userNotificationDelegateAsJSON);
+            //list.Add(userNotificationDelegate);
 
-        
-
+            //var userNotificationDelegateAsJSON = JsonConvert.SerializeObject(list);
+            //File.WriteAllText(mNotificationFileName, userNotificationDelegateAsJSON);
 
 
-            //var content = new UNMutableNotificationContent();
-            //content.Title = "Notification Title";
-            //content.Subtitle = "Notification Subtitle";
-            //content.Body = "This is the message body of the notification.";
-            //content.Badge = 1;
-
-
-            //var trigger = UNTimeIntervalNotificationTrigger.CreateTrigger(1, false);
-
-            //var requestID = "sampleRequest";
-            //var request = UNNotificationRequest.FromIdentifier(requestID, content, trigger);
-
-            //UNUserNotificationCenter.Current.AddNotificationRequest(request, (err) =>
+            //userNotificationDelegate.OnTapNotificationPressed += (object sender1, OnTapNotificationCustomEventArgs e) =>
             //{
-            //    if (err != null)
-            //    {
-            //        // Do something with error...
-            //    }
-            //});
+            //    MStoryboard = e.MStoryboard;
+
+            //    MNavigationController = e.MNavigationController;
+
+            //    //var mainActivitiy = mStoryboard.InstantiateViewController("ViewController");
+            //    //this.mNavigationController.PushViewController(mainActivitiy, true);
+
+            //};
 
 
+            /////////////////////////////////////
+          //  RegisterForNotifications();
 
-            if (OnTapNotificationPressed != null)
-            {
-                OnTapNotificationPressed.Invoke
-                    (this, new OnTapNotificationCustomEventArgs(this.Storyboard, this.NavigationController));
-            }
-
-            RegisterForNotifications();
-
-            ScheduleNotification();
+            CreateNotification();
+  
 
         }
 
@@ -224,15 +342,16 @@ namespace VikRuse
                                                                   });
         }
 
-        void ScheduleNotification()
+     private   void CreateNotification()
         {
             // Create content
             var content = new UNMutableNotificationContent();
+
             content.Title = "Title";
             content.Subtitle = "Subtitle";
             content.Body = "Body";
             content.Badge = 1;
-            content.CategoryIdentifier = categoryID;
+           // content.CategoryIdentifier = categoryID;
             content.Sound = UNNotificationSound.Default;
 
 
@@ -240,11 +359,11 @@ namespace VikRuse
             // Fire trigger in one seconds
             var trigger = UNTimeIntervalNotificationTrigger.CreateTrigger(0.1, false);
 
-            var requestID = "notificationRequest";   ///sampleRequest
+            var requestID = "sampleRequest";   ///sampleRequest ,      notificationRequest
             var request = UNNotificationRequest.FromIdentifier(requestID, content, trigger);
 
             //Here I set the Delegate to handle the user tapping on notification
-            UNUserNotificationCenter.Current.Delegate = new UserNotificationCenterDelegate();
+           // UNUserNotificationCenter.Current.Delegate = new UserNotificationCenterDelegate();
 
             UNUserNotificationCenter.Current.AddNotificationRequest(request, (err) => 
             {
@@ -257,8 +376,591 @@ namespace VikRuse
                 {
                     // Report Success
                     System.Console.WriteLine("Notification Scheduled: {0}", request);
+
+                   
                 }
             });
         }
+
+        partial void RefreshBtn_Activated(UIBarButtonItem sender)
+        {
+           // RunOnUiThread(() => { ShowProgressDialog(); });
+
+            Thread thread = new Thread(RefreshCustomers);
+
+            thread.Start();
+        }
+
+        private void RefreshCustomers()
+        {
+            GetCustomersSavedInPhone();
+            
+            //chek if there is no customers to refrsh
+            if (mCustomers.Count == 0)
+            {
+                  // RunOnUiThread(() => RefreshProgressDialogAndToatWhenThereIsNoCustomers());
+
+                ///////
+                InvokeOnMainThread(() =>
+                {
+                    RefreshProgressDialogAndToatWhenThereIsNoCustomers();
+                });
+
+                return;
+            }
+            else if (mCustomers.Count != 0)
+            {
+                UpdateCustomers(mCustomers);
+            }
+        }
+        private void RefreshProgressDialogAndToatWhenThereIsNoCustomers()
+        {
+            //mHour.Hidden = true ;
+            //mDate.Hidden = true;
+            // mObnoveniKum.Visibility = ViewStates.Gone;
+
+            //MabonatiObnoveniKum.Text = "Моля добавете абонати";
+
+            MFullUpdateText.Text = "Моля добавете абонати";
+
+            //  progress.Dismiss();
+        }
+
+        private void UpdateCustomers(List<Customer> mCustomers) //, ISharedPreferences pref)
+        {
+            ConnectToApi connectToApi = new ConnectToApi();
+
+            bool connection = connectToApi.CheckConnectionOfVikSite();
+
+            if (connection == true)
+            {
+
+                EncryptConnection encryp = new EncryptConnection();
+
+
+
+                string crypFinalPass = encryp.Encrypt();
+
+                //// get from preferences
+                GrudMessageFromPreferemces grudMessage = new GrudMessageFromPreferemces();
+
+                int lastMessageId = grudMessage.GetMessageFromPreferencesInPhone().MessageID;
+
+
+                //realno !!!!!!!!!!!!!!
+                string messageUrl = ConnectToApi.urlAPI + "api/msg/";
+
+                ///teest
+              //  string messageUrl = "http://192.168.2.222/VIKWebApi/api/msg/";
+
+                string finalUrl = messageUrl + crypFinalPass + "/" + lastMessageId;
+
+                var messageFromApiAsJsonString = connectToApi.FetchApiDataAsync(finalUrl);
+
+                if (messageFromApiAsJsonString != null)
+                {
+                    Message newMessage = new Message();
+
+                    newMessage = connectToApi.GetMessageFromApi(messageFromApiAsJsonString);
+
+                    if (newMessage.MessageID > lastMessageId)
+                    {
+                        grudMessage.SaveMessageInPhone(newMessage);
+
+                        int messagesCount = newMessage.Messages.Count;
+
+                        if (messagesCount > 0)
+                        {
+                            SentNotificationWithoutSubscribe(newMessage);
+                            
+                        }
+                    }
+                }
+
+                foreach (var customer in mCustomers)
+                {
+
+
+                    // if(isAnyNotifycationCheck == true)
+                    //   {
+                    string billNumber = customer.Nomer.ToString();
+                    string egn = customer.EGN.ToString();
+
+                    //CREATE URL
+                    // string url = "http://192.168.2.222/VIKWebApi/";
+
+                    /// !!!!!!!!!!!!!!!!!!!!!!!!
+                    // string realUrl = ConnectToApi.urlAPI + "api/abonats/" + crypFinalPass + "/" + billNumber + "/" + egn;
+
+                     string realUrl = ConnectToApi.urlAPI + "api/abonats/" + crypFinalPass + "/" + billNumber + "/" + egn + "/" + ConnectToApi.updateByButtonRefresh + "/";
+                    // string realUrl = "http://192.168.2.222/VIKWebApi/" + "api/abonats/" + crypFinalPass + "/" + billNumber + "/" + egn + "/"
+                    // + ConnectToApi.updateByButtonRefresh + "/";
+
+
+                    var jsonResponse = connectToApi.FetchApiDataAsync(realUrl);
+                   // string jsonResponse = null;
+
+                    //check the api
+                    if (jsonResponse == null)
+                    {
+                       // RunOnUiThread(() => RefreshProgressDialogAndToastWhenNoConnectioToApi());
+
+                        return;
+                    }
+
+                    // check in vikSite is there a customer with this billNumber (is billNumber correct)
+                    else if (jsonResponse == "[]")
+                    {
+                      //  RefreshProgressDialogAndToastWhenInputIsNotValid();
+
+                        return;
+                    }
+
+                    // check is billNumber correct and get and save customer in phone
+                    else if (jsonResponse != null)
+                    {
+                        // var jsonArray = JArray.Parse(jsonResponse);
+
+                        Customer newCustomer = connectToApi.GetCustomerFromApi(jsonResponse);
+
+                        if (newCustomer != null && newCustomer.IsExisting == true)
+                        {
+                            newCustomer.NotifyInvoiceOverdue = customer.NotifyInvoiceOverdue;
+                            newCustomer.NotifyNewInvoice = customer.NotifyNewInvoice;
+                            newCustomer.NotifyReading = customer.NotifyReading;
+
+
+                            /////// be6e customer.ReciveNotifyReadingToday
+                            bool isAnyNotifycationCheck =
+                                 (newCustomer.ReceiveNotifyInvoiceOverdueToday == true ||
+                                 newCustomer.ReceiveNotifyNewInvoiceToday == true ||
+                                 newCustomer.ReciveNotifyReadingToday == true);    ///////////  customer.ReciveNotifyReadingToday
+
+
+                            if (isAnyNotifycationCheck == true)
+                            {
+                                mCustomerFromApiToNotifyToday.Add(newCustomer);
+
+                            }
+
+                            //newCustomer.ReceiveNotifyInvoiceOverdueToday = false;
+                            //newCustomer.ReceiveNotifyNewInvoiceToday = false;
+                            //newCustomer.ReciveNotifyReadingToday = false;
+
+                            //mAllUpdateCustomerFromApi.Add(newCustomer);
+
+
+
+                            Customer updateCutomerButNoNotify = connectToApi.GetCustomerFromApi(jsonResponse);
+
+                            updateCutomerButNoNotify.NotifyInvoiceOverdue = customer.NotifyInvoiceOverdue;
+                            updateCutomerButNoNotify.NotifyNewInvoice = customer.NotifyNewInvoice;
+                            updateCutomerButNoNotify.NotifyReading = customer.NotifyReading;
+
+                            updateCutomerButNoNotify.ReceiveNotifyInvoiceOverdueToday = false;
+                            updateCutomerButNoNotify.ReceiveNotifyNewInvoiceToday = false;
+                            updateCutomerButNoNotify.ReciveNotifyReadingToday = false;
+
+                            mAllUpdateCustomerFromApi.Add(updateCutomerButNoNotify);
+
+
+                            //bool wiilReceiveNotificationToday =
+                            //     (updateCutomerButNoNotify.ReceiveNotifyInvoiceOverdueToday == true ||
+                            //     updateCutomerButNoNotify.ReceiveNotifyNewInvoiceToday == true ||
+                            //     updateCutomerButNoNotify.ReciveNotifyReadingToday == true);
+
+                            //if(wiilReceiveNotificationToday == true)
+                            //{
+                            //    mCustomerFromApiToNotifyToday.Add(newCustomer);
+                            //}
+                            //else
+                            //{
+                            //    mAllUpdateCustomerFromApi.Add(updateCutomerButNoNotify);
+                            //}
+
+
+                        }
+                        else
+                        {
+                            InvokeOnMainThread(() =>
+                            {
+                               // RefreshProgressDialogAndToastWhenNoConnectioToApi();
+                            });
+
+                            return;
+                        }
+                    }
+                    // }
+                }
+
+                #region setting the updating date
+
+                string updateHour;
+                string updateDate;
+
+                GetUpdateDateAndHour(out updateHour, out updateDate);
+
+                #endregion
+
+                InvokeOnMainThread(() =>
+                {
+                    GetFinalUpdateDateHour();
+
+                });
+
+                SelectWhichCustomersTobeNotified(mCountНotifyReadingustomers, mCountНotifyInvoiceOverdueCustomers, mCountNewНotifyNewInvoiceCustomers, mCustomerFromApiToNotifyToday);
+
+                InvokeOnMainThread(() =>
+                {
+
+                    SaveUpdatesInPhone(MDate.ToString(), MHour.ToString());
+
+                    ViewController mainScreeen = this.Storyboard.InstantiateViewController("ViewController") as ViewController;
+
+                    this.NavigationController.PushViewController(mainScreeen, true);
+                });
+       
+
+                SentNoficationForNewInovoice(mCountNewНotifyNewInvoiceCustomers);
+
+                SentNotificationForOverdue(mCountНotifyInvoiceOverdueCustomers);
+
+                SentNotificationForReading(mCountНotifyReadingustomers);
+
+               
+
+                
+            }
+            else
+            {
+             //   InvokeOnMainThread(() => RefreshProgresDialogAndToastWhenThereIsNoConnection());
+
+                return;
+            }
+
+            string s = string.Empty;
+        }
+
+        private void SentNotificationWithoutSubscribe(Message newMessage)
+        {
+
+            var content = new UNMutableNotificationContent();
+
+            content.Title = "Съобщение от ВиК Русе";
+
+            foreach (var item in newMessage.Messages)
+            {
+                //  Generate a message summary for the body of the notification:
+                content.Subtitle = ($"{item.ToString()}");
+                
+            }
+
+            content.Sound = UNNotificationSound.Default;
+
+
+            var notification = new UILocalNotification();
+            // Fire trigger in one seconds
+            var trigger = UNTimeIntervalNotificationTrigger.CreateTrigger(0.1, false);
+
+            var requestID = "WithoutSubscribe";   ///sampleRequest ,      notificationRequest
+            var request = UNNotificationRequest.FromIdentifier(requestID, content, trigger);
+
+            //Here I set the Delegate to handle the user tapping on notification
+            // UNUserNotificationCenter.Current.Delegate = new UserNotificationCenterDelegate();
+
+            UNUserNotificationCenter.Current.AddNotificationRequest(request, (err) =>
+            {
+                if (err != null)
+                {
+                    // Report error
+                    System.Console.WriteLine("Error: {0}", err);
+                }
+                else
+                {
+                    // Report Success
+                    System.Console.WriteLine("Notification Scheduled: {0}", request);
+
+
+                }
+            });
+
+        }
+
+        private void SentNotificationForReading(List<Customer> countНotifyReadingustomers)
+        {
+            if (countНotifyReadingustomers.Count > 0)
+            {
+                var content = new UNMutableNotificationContent();
+
+                // Set the title and text of the notification:
+                content.Title = "Ден на отчитане";
+
+                 List<string> notificationContent = new List<string>();
+               // content.Body = string.Empty;
+
+                foreach (var item in countНotifyReadingustomers)
+                {
+                    // Generate a message summary for the body of the notification:
+                    string format = "dd.MM.yyyy";
+                    string date = item.StartReportDate.ToString(format);
+
+                    string currentRowContent = ($"Аб. номер: {item.Nomer.ToString()}, {date}" + System.Environment.NewLine);
+
+                    notificationContent.Add(currentRowContent);
+                 //   content.Body = ($"Аб. номер: {item.Nomer.ToString()}, {date}" + System.Environment.NewLine);
+
+                }
+                string fullContent = string.Empty;
+                foreach (var item in notificationContent)
+                {
+                    fullContent = fullContent + item;
+                }
+
+                content.Body = fullContent;
+
+                content.Sound = UNNotificationSound.Default;
+
+
+                var notification = new UILocalNotification();
+                // Fire trigger in one seconds
+                var trigger = UNTimeIntervalNotificationTrigger.CreateTrigger(0.1, false);
+
+                var requestID = "reading";   ///sampleRequest ,      notificationRequest
+                var request = UNNotificationRequest.FromIdentifier(requestID, content, trigger);
+
+                //Here I set the Delegate to handle the user tapping on notification
+                // UNUserNotificationCenter.Current.Delegate = new UserNotificationCenterDelegate();
+
+                UNUserNotificationCenter.Current.AddNotificationRequest(request, (err) =>
+                {
+                    if (err != null)
+                    {
+                        // Report error
+                        System.Console.WriteLine("Error: {0}", err);
+                    }
+                    else
+                    {
+                        // Report Success
+                        System.Console.WriteLine("Notification Scheduled: {0}", request);
+
+
+                    }
+                });
+
+            }
+        }
+
+        private void SentNotificationForOverdue(List<Customer> countНotifyInvoiceOverdueCustomers)
+        {
+            if (countНotifyInvoiceOverdueCustomers.Count > 0)
+            {
+                //string countНotifyInvoiceOverdueCustomersAsString = JsonConvert.SerializeObject(countНotifyInvoiceOverdueCustomers);
+
+                // Create content
+                var content = new UNMutableNotificationContent();
+
+                content.Title = "Нова Просрочване";
+
+                foreach (var item in countНotifyInvoiceOverdueCustomers)
+                {
+                    // Generate a message summary for the body of the notification:
+
+                    string format = "dd.MM.yyyy";
+                    string date = item.EndPayDate.ToString(format);
+
+                    content.Body = ($"Аб. номер: {item.Nomer.ToString()}, {date}" + System.Environment.NewLine);
+  
+                }
+
+                content.Sound = UNNotificationSound.Default;
+
+
+                var notification = new UILocalNotification();
+                // Fire trigger in one seconds
+                var trigger = UNTimeIntervalNotificationTrigger.CreateTrigger(0.1, false);
+
+                var requestID = "overdue";   ///sampleRequest ,      notificationRequest
+                var request = UNNotificationRequest.FromIdentifier(requestID, content, trigger);
+
+                //Here I set the Delegate to handle the user tapping on notification
+                // UNUserNotificationCenter.Current.Delegate = new UserNotificationCenterDelegate();
+
+                UNUserNotificationCenter.Current.AddNotificationRequest(request, (err) =>
+                {
+                    if (err != null)
+                    {
+                        // Report error
+                        System.Console.WriteLine("Error: {0}", err);
+                    }
+                    else
+                    {
+                        // Report Success
+                        System.Console.WriteLine("Notification Scheduled: {0}", request);
+
+
+                    }
+                });
+
+
+            }
+        }
+
+
+        private void SentNoficationForNewInovoice(List<Customer> countNewНotifyNewInvoiceCustomers)
+        {
+            if (countNewНotifyNewInvoiceCustomers.Count > 0)
+            {
+             
+                // Create content
+                var content = new UNMutableNotificationContent();
+
+                content.Title = "Нова фактура";
+
+                foreach (var item in countNewНotifyNewInvoiceCustomers)
+                {
+                    // Generate a message summary for the body of the notification:
+
+                    string money = item.MoneyToPay.ToString("C", System.Globalization.CultureInfo.GetCultureInfo("bg-BG"));
+
+                    content.Body = ($"Аб. номер: {item.Nomer.ToString()}, {money}" + Environment.NewLine);
+
+                   // bulideer.SetContentText($"Аб. номер: {item.Nomer.ToString()}, {money}");
+                }
+
+              //  content.Subtitle = "Subtitle";
+            //    content.Body = "Body";
+              //  content.Badge = 1;
+                // content.CategoryIdentifier = categoryID;
+                content.Sound = UNNotificationSound.Default;
+
+
+                var notification = new UILocalNotification();
+                // Fire trigger in one seconds
+                var trigger = UNTimeIntervalNotificationTrigger.CreateTrigger(0.1, false);   //////////////////false
+
+                var requestID = "newInovoice";   ///sampleRequest ,      notificationRequest
+                var request = UNNotificationRequest.FromIdentifier(requestID, content, trigger);
+
+                //Here I set the Delegate to handle the user tapping on notification
+                // UNUserNotificationCenter.Current.Delegate = new UserNotificationCenterDelegate();
+
+                UNUserNotificationCenter.Current.AddNotificationRequest(request, (err) =>
+                {
+                    if (err != null)
+                    {
+                        // Report error
+                        System.Console.WriteLine("Error: {0}", err);
+                    }
+                    else
+                    {
+                        // Report Success
+                        System.Console.WriteLine("Notification Scheduled: {0}", request);
+
+
+                    }
+                });       
+            }
+        }
+
+        private static void SelectWhichCustomersTobeNotified(List<Customer> countНotifyReadingustomers, List<Customer> countНotifyInvoiceOverdueCustomers, List<Customer> countNewНotifyNewInvoiceCustomers, List<Customer> mCustomerFromApiNoNotifyToday)
+        {
+            foreach (var customer in mCustomerFromApiNoNotifyToday)   /// allCustomers
+            {
+
+                bool isAnyNotifycationCheck =
+                    (customer.ReceiveNotifyInvoiceOverdueToday == true ||
+                    customer.ReceiveNotifyNewInvoiceToday == true ||
+                    customer.ReciveNotifyReadingToday == true);
+
+                if (isAnyNotifycationCheck == true)
+                {
+
+                    if (customer.ReceiveNotifyNewInvoiceToday == true && customer.NotifyNewInvoice == true)
+                    {
+                        //customer.ReceiveNotifyNewInvoiceToday = false;
+                        countNewНotifyNewInvoiceCustomers.Add(customer);
+                    }
+                    if (customer.ReceiveNotifyInvoiceOverdueToday == true && customer.NotifyInvoiceOverdue == true)
+                    {
+                        countНotifyInvoiceOverdueCustomers.Add(customer);
+                    }
+                    if (customer.ReciveNotifyReadingToday == true && customer.NotifyReading == true)
+                    {
+
+                        countНotifyReadingustomers.Add(customer);
+                    }
+                }
+            }
+        }
+
+
+        private void SaveUpdatesInPhone(string updateHour, string updateDate)
+        {
+            DateTime updateHourAndDate = DateTime.Now;
+
+            string DateFormatt = "HH:mm";
+            string format = "dd.MM.yyyy";
+
+            string shortReportDatetHour = updateHourAndDate.ToString(DateFormatt);
+
+           
+           updateHour = updateHourAndDate.ToString(DateFormatt);  // + " часа, ";
+           updateDate = updateHourAndDate.ToString(format);
+            
+            //mHour.Text = updateHour;
+            //mDate.Text = updateDate;
+
+            // bool isUpdated = true;
+
+            // convert the list to json
+            var listOfCustomersAsJson = JsonConvert.SerializeObject(mAllUpdateCustomerFromApi);
+
+
+            File.WriteAllText(mCustomersFilename, listOfCustomersAsJson);
+            File.WriteAllText(mHourFileName, updateHour);
+            File.WriteAllText(mDateFileName, updateDate);
+
+        }
+
+        private void GetUpdateDateAndHour(out string updateHour, out string updateDate)
+        {
+            updateHour = string.Empty;
+            updateDate = string.Empty;
+
+            string localParamHour;
+            string localParamDate;
+
+            InvokeOnMainThread(() => 
+            {
+                GetUpdateDateAndHourForMainThread(out localParamHour, out localParamDate);
+            });
+
+        }
+
+        private void GetUpdateDateAndHourForMainThread(out string updateHour, out string updateDate)
+        {
+
+            DateTime updateHourAndDate = DateTime.Now;
+
+            string DateFormatt = "HH:mm";
+
+            string shortReportDatetHour = updateHourAndDate.ToString(DateFormatt);
+
+            updateHour = updateHourAndDate.ToString(DateFormatt) + " часа, ";
+            updateDate = updateHourAndDate.ToShortDateString();
+
+            MHour = updateHour;
+            MDate = updateDate;
+
+        }
+
+        private void GetFinalUpdateDateHour()
+        {
+
+            MDate = MDate.ToString();
+            MHour = MHour.ToString();
+        }
+
+
     }
 }

@@ -30,6 +30,7 @@ namespace VikRuse
         public DateTime StartReportDate { get; set; }
         public DateTime EndReportDate { get; set; }
 
+        public bool IsExisting { get; set; }
 
         public Customer()
         {

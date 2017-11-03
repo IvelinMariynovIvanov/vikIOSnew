@@ -139,6 +139,7 @@ namespace VikRuse
             this.MCity.ShouldReturn += (textField) =>
             {
                 textField.ResignFirstResponder();
+
                 return true;
             };
 

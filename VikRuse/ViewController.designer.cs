@@ -27,7 +27,15 @@ namespace VikRuse
 
         [Outlet]
         [GeneratedCode ("iOS Designer", "1.0")]
+        UIKit.UILabel mFullUpdateDateText { get; set; }
+
+        [Outlet]
+        [GeneratedCode ("iOS Designer", "1.0")]
         UIKit.UINavigationItem NavigationItem { get; set; }
+
+        [Outlet]
+        [GeneratedCode ("iOS Designer", "1.0")]
+        UIKit.UIBarButtonItem RefreshBtn { get; set; }
 
         [Action ("AddCustomer_Activated:")]
         [GeneratedCode ("iOS Designer", "1.0")]
@@ -37,7 +45,11 @@ namespace VikRuse
         [GeneratedCode ("iOS Designer", "1.0")]
         partial void Camera_Activated (UIKit.UIBarButtonItem sender);
 
-        [Action ("UIButton8614_TouchUpInside:")]
+        [Action ("RefreshBtn_Activated:")]
+        [GeneratedCode ("iOS Designer", "1.0")]
+        partial void RefreshBtn_Activated (UIKit.UIBarButtonItem sender);
+
+        [Action ("SetnNotification:")]
         [GeneratedCode ("iOS Designer", "1.0")]
         partial void SetnNotification (UIKit.UIButton sender);
 
@@ -58,9 +70,19 @@ namespace VikRuse
                 EmployeesTableView = null;
             }
 
+            if (mFullUpdateDateText != null) {
+                mFullUpdateDateText.Dispose ();
+                mFullUpdateDateText = null;
+            }
+
             if (NavigationItem != null) {
                 NavigationItem.Dispose ();
                 NavigationItem = null;
+            }
+
+            if (RefreshBtn != null) {
+                RefreshBtn.Dispose ();
+                RefreshBtn = null;
             }
         }
     }

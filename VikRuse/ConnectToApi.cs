@@ -20,6 +20,12 @@ namespace VikRuse
         
         public static string sentSignal = "http://192.168.2.222/VIKWebApi/api/postimage";
 
+        public static int updateByButtonRefresh = 1;
+
+        public static int updateByAutoService = 0;  //refresh notification from api
+
+        public static int updateByAddCutomerButton = 2; // do not refresh notification from api
+
         public Customer GetCustomerFromApi(string jsonResponse)
         {
             try
@@ -46,6 +52,8 @@ namespace VikRuse
                 newCustomer.EndPayDate = (DateTime)jsonArrayElement["PaymentDate"];
                 newCustomer.StartReportDate = (DateTime)jsonArrayElement["DataOtchetOt"];
                 newCustomer.EndReportDate = (DateTime)jsonArrayElement["DataOtchetDo"];
+
+                newCustomer.IsExisting = (bool)(jsonArrayElement["IsExisting"]);
 
                 return newCustomer;
             }

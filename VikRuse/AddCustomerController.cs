@@ -17,6 +17,8 @@ namespace VikRuse
 
         private static string mDocuments = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
         private string  mFilename = Path.Combine(mDocuments, "Customers.txt");
+        private string mHourFileName = Path.Combine(mDocuments, "Hour.txt");
+        private string mDateFileName = Path.Combine(mDocuments, "Date.txt");
 
         private string listOfCustomersAsJsonString = string.Empty;
 
@@ -109,6 +111,7 @@ namespace VikRuse
  
                     }
                 }
+
                 if(isThisCustomerAlredyExist ==false)
                 {
                     AddOneCustomer();
@@ -146,8 +149,8 @@ namespace VikRuse
                 if (connection == true)
                 {
 
-                    string realUrl =
-                        ConnectToApi.urlAPI + "api/abonats/" + crypFinalPass + "/" + mBillNumber.ToString() + "/" + mEgn.ToString();
+                    string realUrl = ConnectToApi.urlAPI + "api/abonats/" + crypFinalPass
+                        + "/" + mBillNumber.ToString() + "/" + mEgn.ToString() + "/" + ConnectToApi.updateByAddCutomerButton + "/";
 
                     var jsonResponse = connectToApi.FetchApiDataAsync(realUrl);
 
@@ -192,10 +195,23 @@ namespace VikRuse
                             string isAddedAnewCustomerAsString = JsonConvert.SerializeObject(isAddedAnewCustomer);
                             string isAlreadyBeenUpdatedAsString = JsonConvert.SerializeObject(isAlreadyBeenUpdated);
 
-                            
+                            DateTime updateHourAndDate = DateTime.Now;
+
+                            string DateFormatt = "HH:mm";
+                            string format = "dd.MM.yyyy";
+
+                            string shortReportDatetHour = updateHourAndDate.ToString(DateFormatt);
+
+
+                            var  updateHour = updateHourAndDate.ToString(DateFormatt);  // + " часа, ";
+                            var  updateDate = updateHourAndDate.ToString(format);
+
                             File.WriteAllText(mFilename, listOfCustomersAsJson);
+                            File.WriteAllText(mHourFileName, updateHour);
+                            File.WriteAllText(mDateFileName, updateDate);
 
                             ViewController mainScreeen = this.Storyboard.InstantiateViewController("ViewController") as ViewController;
+
                             if (mainScreeen != null)
                             {
                                 

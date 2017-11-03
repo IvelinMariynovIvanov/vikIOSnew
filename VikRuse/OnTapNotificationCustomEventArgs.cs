@@ -21,10 +21,10 @@ namespace VikRuse
 
         }
 
-        public OnTapNotificationCustomEventArgs(UIStoryboard mStoryboard, UINavigationController mNavigationController)
+        public OnTapNotificationCustomEventArgs(UIStoryboard Storyboard, UINavigationController NavigationController)
         {
-            MStoryboard = mStoryboard;
-            MNavigationController = mNavigationController;
+            MStoryboard = Storyboard;
+            MNavigationController = NavigationController;
         }
 
 
