@@ -7,6 +7,8 @@ using System.Threading;
 using UIKit;
 using UserNotifications;
 using static VikRuse.OnTapNotificationCustomEventArgs;
+using BigTed;
+
 
 namespace VikRuse
 {
@@ -76,13 +78,46 @@ namespace VikRuse
 
         }
 
+        public override void ViewWillAppear(bool animated)
+        {
+            base.ViewWillAppear(animated);
+
+            GetCustomersSavedInPhone();
+
+
+          //  AppDelegate app = new AppDelegate();
+
+            if (mCustomers.Count != 0)
+            {
+
+                MHour = GetUpdateHour();
+                MDate = GetUpdateDate();
+
+                MFullUpdateText.Text = "Абонати обновени към " + MHour + MDate;
+
+            }
+            else
+            {
+                mFullUpdateDateText.Text = "Моля добавете абонати";
+            }
+
+
+            EmployeesTableView.Source = new EmployeesTableViewSource(mCustomers, Storyboard, this, NavigationController);
+
+            EmployeesTableView.ReloadData();
+        }
+
         public override void ViewDidLoad()
         {
-            base.ViewDidLoad();
+
+           base.ViewDidLoad();
+
+
+           this.NavigationController.NavigationBar.BarTintColor = UIColor.FromRGB(0, 134, 255);
+           this.NavigationController.NavigationBar.TintColor = UIColor.White;
+
             // Perform any additional setup after loading the view, typically from a nib.
 
-            this.NavigationController.NavigationBar.BarTintColor = UIColor.FromRGB(0, 134, 255);
-            this.NavigationController.NavigationBar.TintColor = UIColor.White;
 
             GetCustomersSavedInPhone();
 
@@ -95,6 +130,8 @@ namespace VikRuse
                 MDate = GetUpdateDate();
 
                 MFullUpdateText.Text = "Абонати обновени към " + MHour + MDate;
+
+               // MFullUpdateText.Text = DateTime.Now.ToShortTimeString();
 
             }
             else
@@ -144,6 +181,8 @@ namespace VikRuse
 
             //};
         }
+
+        
 
         public  string GetUpdateDate()
         {
@@ -384,7 +423,11 @@ namespace VikRuse
 
         partial void RefreshBtn_Activated(UIBarButtonItem sender)
         {
-           // RunOnUiThread(() => { ShowProgressDialog(); });
+            // RunOnUiThread(() => { ShowProgressDialog(); });
+
+            //Show a HUD with a progress spinner and the text
+            BTProgressHUD.Show("Обновяване");
+
 
             Thread thread = new Thread(RefreshCustomers);
 
@@ -411,6 +454,8 @@ namespace VikRuse
             else if (mCustomers.Count != 0)
             {
                 UpdateCustomers(mCustomers);
+
+               // BTProgressHUD.Dismiss();
             }
         }
         private void RefreshProgressDialogAndToatWhenThereIsNoCustomers()
@@ -420,6 +465,8 @@ namespace VikRuse
             // mObnoveniKum.Visibility = ViewStates.Gone;
 
             //MabonatiObnoveniKum.Text = "Моля добавете абонати";
+
+            BTProgressHUD.Dismiss();
 
             MFullUpdateText.Text = "Моля добавете абонати";
 
@@ -479,7 +526,13 @@ namespace VikRuse
 
                 foreach (var customer in mCustomers)
                 {
+                    bool isReceiveNotifyNewInvoiceCheck = false;
+                    bool isReceiveNotifyInvoiceOverdueCheck = false;
+                    bool isReciveNotifyReadingCheck = false;
 
+                    isReceiveNotifyNewInvoiceCheck = customer.NotifyNewInvoice;
+                    isReceiveNotifyInvoiceOverdueCheck = customer.NotifyInvoiceOverdue;
+                    isReciveNotifyReadingCheck = customer.NotifyReading;
 
                     // if(isAnyNotifycationCheck == true)
                     //   {
@@ -495,6 +548,10 @@ namespace VikRuse
                      string realUrl = ConnectToApi.urlAPI + "api/abonats/" + crypFinalPass + "/" + billNumber + "/" + egn + "/" + ConnectToApi.updateByButtonRefresh + "/";
                     // string realUrl = "http://192.168.2.222/VIKWebApi/" + "api/abonats/" + crypFinalPass + "/" + billNumber + "/" + egn + "/"
                     // + ConnectToApi.updateByButtonRefresh + "/";
+
+                    //string realUrl = ConnectToApi.urlAPI + "api/abonats/" + crypFinalPass + "/" + billNumber + "/" + egn + "/"
+                    //              + ConnectToApi.updateByAddCutomerButton + "/"
+                    //              + isReceiveNotifyNewInvoiceCheck + "/" + isReceiveNotifyInvoiceOverdueCheck + "/" + isReciveNotifyReadingCheck + "/";
 
 
                     var jsonResponse = connectToApi.FetchApiDataAsync(realUrl);
@@ -519,72 +576,56 @@ namespace VikRuse
                     // check is billNumber correct and get and save customer in phone
                     else if (jsonResponse != null)
                     {
-                        // var jsonArray = JArray.Parse(jsonResponse);
 
-                        Customer newCustomer = connectToApi.GetCustomerFromApi(jsonResponse);
+                        Customer updateCutomerButNoNotify = connectToApi.GetCustomerFromApi(jsonResponse);
 
-                        if (newCustomer != null && newCustomer.IsExisting == true)
+                        if (updateCutomerButNoNotify != null && updateCutomerButNoNotify.IsExisting == true)
+                        //  (newCustomer != null && newCustomer.IsExisting == true)
                         {
-                            newCustomer.NotifyInvoiceOverdue = customer.NotifyInvoiceOverdue;
-                            newCustomer.NotifyNewInvoice = customer.NotifyNewInvoice;
-                            newCustomer.NotifyReading = customer.NotifyReading;
-
-
-                            /////// be6e customer.ReciveNotifyReadingToday
-                            bool isAnyNotifycationCheck =
-                                 (newCustomer.ReceiveNotifyInvoiceOverdueToday == true ||
-                                 newCustomer.ReceiveNotifyNewInvoiceToday == true ||
-                                 newCustomer.ReciveNotifyReadingToday == true);    ///////////  customer.ReciveNotifyReadingToday
-
-
-                            if (isAnyNotifycationCheck == true)
-                            {
-                                mCustomerFromApiToNotifyToday.Add(newCustomer);
-
-                            }
-
-                            //newCustomer.ReceiveNotifyInvoiceOverdueToday = false;
-                            //newCustomer.ReceiveNotifyNewInvoiceToday = false;
-                            //newCustomer.ReciveNotifyReadingToday = false;
-
-                            //mAllUpdateCustomerFromApi.Add(newCustomer);
-
-
-
-                            Customer updateCutomerButNoNotify = connectToApi.GetCustomerFromApi(jsonResponse);
-
                             updateCutomerButNoNotify.NotifyInvoiceOverdue = customer.NotifyInvoiceOverdue;
                             updateCutomerButNoNotify.NotifyNewInvoice = customer.NotifyNewInvoice;
                             updateCutomerButNoNotify.NotifyReading = customer.NotifyReading;
 
-                            updateCutomerButNoNotify.ReceiveNotifyInvoiceOverdueToday = false;
-                            updateCutomerButNoNotify.ReceiveNotifyNewInvoiceToday = false;
-                            updateCutomerButNoNotify.ReciveNotifyReadingToday = false;
-
-                            mAllUpdateCustomerFromApi.Add(updateCutomerButNoNotify);
-
-
-                            //bool wiilReceiveNotificationToday =
-                            //     (updateCutomerButNoNotify.ReceiveNotifyInvoiceOverdueToday == true ||
-                            //     updateCutomerButNoNotify.ReceiveNotifyNewInvoiceToday == true ||
-                            //     updateCutomerButNoNotify.ReciveNotifyReadingToday == true);
-
-                            //if(wiilReceiveNotificationToday == true)
+                            //if (updateCutomerButNoNotify.ReceiveNotifyInvoiceOverdueToday == true)
                             //{
-                            //    mCustomerFromApiToNotifyToday.Add(newCustomer);
+                            //    updateCutomerButNoNotify.ReceiveNotifyInvoiceOverdueToday = true;
                             //}
                             //else
                             //{
-                            //    mAllUpdateCustomerFromApi.Add(updateCutomerButNoNotify);
+                            //    updateCutomerButNoNotify.ReceiveNotifyInvoiceOverdueToday = customer.ReceiveNotifyInvoiceOverdueToday;
                             //}
+
+                            //if (updateCutomerButNoNotify.ReceiveNotifyNewInvoiceToday == true)
+                            //{
+                            //    updateCutomerButNoNotify.ReceiveNotifyNewInvoiceToday = true;
+                            //}
+                            //else
+                            //{
+                            //    updateCutomerButNoNotify.ReceiveNotifyNewInvoiceToday = customer.ReceiveNotifyNewInvoiceToday;
+                            //}
+
+                            //if (updateCutomerButNoNotify.ReciveNotifyReadingToday == true)
+                            //{
+                            //    updateCutomerButNoNotify.ReciveNotifyReadingToday = true;
+                            //}
+                            //else
+                            //{
+                            //    updateCutomerButNoNotify.ReciveNotifyReadingToday = customer.ReciveNotifyReadingToday;
+                            //}
+
+                            mAllUpdateCustomerFromApi.Add(updateCutomerButNoNotify);     ////////////updateCutomerButNoNotify
 
 
                         }
+
+
                         else
                         {
                             InvokeOnMainThread(() =>
                             {
+                                BTProgressHUD.Dismiss();
                                // RefreshProgressDialogAndToastWhenNoConnectioToApi();
+
                             });
 
                             return;
@@ -608,16 +649,18 @@ namespace VikRuse
 
                 });
 
-                SelectWhichCustomersTobeNotified(mCountНotifyReadingustomers, mCountНotifyInvoiceOverdueCustomers, mCountNewНotifyNewInvoiceCustomers, mCustomerFromApiToNotifyToday);
+                SelectWhichCustomersTobeNotified(mCountНotifyReadingustomers, mCountНotifyInvoiceOverdueCustomers, mCountNewНotifyNewInvoiceCustomers, mAllUpdateCustomerFromApi ); // mCustomerFromApiToNotifyToday
 
                 InvokeOnMainThread(() =>
                 {
 
                     SaveUpdatesInPhone(MDate.ToString(), MHour.ToString());
 
-                    ViewController mainScreeen = this.Storyboard.InstantiateViewController("ViewController") as ViewController;
+                    this.ViewWillAppear(true);
 
-                    this.NavigationController.PushViewController(mainScreeen, true);
+                    //ViewController mainScreeen = this.Storyboard.InstantiateViewController("ViewController") as ViewController;
+
+                    //this.NavigationController.PushViewController(mainScreeen, true);
                 });
        
 
@@ -627,18 +670,21 @@ namespace VikRuse
 
                 SentNotificationForReading(mCountНotifyReadingustomers);
 
-               
 
-                
+                InvokeOnMainThread(() =>
+                {
+                    BTProgressHUD.Dismiss();
+                });
+
+
             }
             else
             {
-             //   InvokeOnMainThread(() => RefreshProgresDialogAndToastWhenThereIsNoConnection());
+                //   InvokeOnMainThread(() => RefreshProgresDialogAndToastWhenThereIsNoConnection());
+                BTProgressHUD.Dismiss();
 
                 return;
             }
-
-            string s = string.Empty;
         }
 
         private void SentNotificationWithoutSubscribe(Message newMessage)
@@ -761,6 +807,8 @@ namespace VikRuse
 
                 content.Title = "Нова Просрочване";
 
+                List<string> notificationContent = new List<string>();
+
                 foreach (var item in countНotifyInvoiceOverdueCustomers)
                 {
                     // Generate a message summary for the body of the notification:
@@ -768,9 +816,20 @@ namespace VikRuse
                     string format = "dd.MM.yyyy";
                     string date = item.EndPayDate.ToString(format);
 
-                    content.Body = ($"Аб. номер: {item.Nomer.ToString()}, {date}" + System.Environment.NewLine);
+                    string currentRowContent = ($"Аб. номер: {item.Nomer.ToString()}, {date}" + System.Environment.NewLine);
+
+                    notificationContent.Add(currentRowContent);
   
                 }
+
+                string fullContent = string.Empty;
+
+                foreach (var item in notificationContent)
+                {
+                    fullContent = fullContent + item;
+                }
+
+                content.Body = fullContent;
 
                 content.Sound = UNNotificationSound.Default;
 
@@ -816,21 +875,30 @@ namespace VikRuse
 
                 content.Title = "Нова фактура";
 
+                List<string> notificationContent = new List<string>();
+
                 foreach (var item in countNewНotifyNewInvoiceCustomers)
                 {
                     // Generate a message summary for the body of the notification:
 
                     string money = item.MoneyToPay.ToString("C", System.Globalization.CultureInfo.GetCultureInfo("bg-BG"));
 
-                    content.Body = ($"Аб. номер: {item.Nomer.ToString()}, {money}" + Environment.NewLine);
+                    string currentRowContent = ($"Аб. номер: {item.Nomer.ToString()}, {money}" + Environment.NewLine);
 
-                   // bulideer.SetContentText($"Аб. номер: {item.Nomer.ToString()}, {money}");
+                    notificationContent.Add(currentRowContent);
+
+                    // bulideer.SetContentText($"Аб. номер: {item.Nomer.ToString()}, {money}");
                 }
 
-              //  content.Subtitle = "Subtitle";
-            //    content.Body = "Body";
-              //  content.Badge = 1;
-                // content.CategoryIdentifier = categoryID;
+                string fullContent = string.Empty;
+
+                foreach (var item in notificationContent)
+                {
+                    fullContent = fullContent + item;
+                }
+
+                content.Body = fullContent;
+
                 content.Sound = UNNotificationSound.Default;
 
 
@@ -862,30 +930,38 @@ namespace VikRuse
             }
         }
 
-        private static void SelectWhichCustomersTobeNotified(List<Customer> countНotifyReadingustomers, List<Customer> countНotifyInvoiceOverdueCustomers, List<Customer> countNewНotifyNewInvoiceCustomers, List<Customer> mCustomerFromApiNoNotifyToday)
+        private  void SelectWhichCustomersTobeNotified(List<Customer> countНotifyReadingustomers, List<Customer> countНotifyInvoiceOverdueCustomers, List<Customer> countNewНotifyNewInvoiceCustomers, List<Customer> mAllUpdateCustomerFromApi) //mCustomerFromApiNoNotifyToday
         {
-            foreach (var customer in mCustomerFromApiNoNotifyToday)   /// allCustomers
+            foreach (var customer in mAllUpdateCustomerFromApi)   //// mCustomerFromApiToNotifyToday
             {
+                //customer.ReceiveNotifyInvoiceOverdueToday = true;
+                //customer.ReceiveNotifyNewInvoiceToday = true;
+                //customer.ReciveNotifyReadingToday = true;
 
-                bool isAnyNotifycationCheck =
+                //// isAnyNotifycationCheck
+                bool haveToRecieveNotificationToday =
                     (customer.ReceiveNotifyInvoiceOverdueToday == true ||
                     customer.ReceiveNotifyNewInvoiceToday == true ||
                     customer.ReciveNotifyReadingToday == true);
 
-                if (isAnyNotifycationCheck == true)
+                if (haveToRecieveNotificationToday == true)
                 {
 
                     if (customer.ReceiveNotifyNewInvoiceToday == true && customer.NotifyNewInvoice == true)
                     {
-                        //customer.ReceiveNotifyNewInvoiceToday = false;
+                       // customer.ReceiveNotifyNewInvoiceToday = false;
+
                         countNewНotifyNewInvoiceCustomers.Add(customer);
                     }
                     if (customer.ReceiveNotifyInvoiceOverdueToday == true && customer.NotifyInvoiceOverdue == true)
                     {
+                       // customer.ReceiveNotifyInvoiceOverdueToday = false;
+
                         countНotifyInvoiceOverdueCustomers.Add(customer);
                     }
                     if (customer.ReciveNotifyReadingToday == true && customer.NotifyReading == true)
                     {
+                       // customer.ReciveNotifyReadingToday = false;
 
                         countНotifyReadingustomers.Add(customer);
                     }
