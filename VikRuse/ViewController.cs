@@ -8,15 +8,18 @@ using UIKit;
 using UserNotifications;
 using static VikRuse.OnTapNotificationCustomEventArgs;
 using BigTed;
-
+using System.Threading.Tasks;
+using Xamarin.Forms;
+using System.Linq;
 
 namespace VikRuse
 {
     public partial class ViewController : UIViewController
     {
-        //public static UIStoryboard Storyboard = UIStoryboard.FromName("MainStoryboard", null);
 
-      //  public event EventHandler<OnTapNotificationCustomEventArgs> OnTapNotificationPressed;
+        #region Fields
+
+
 
         private static string mDocuments = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
         private string mCustomersFilename = Path.Combine(mDocuments, "Customers.txt");
@@ -33,6 +36,7 @@ namespace VikRuse
         private List<Customer> mCountНotifyReadingustomers = new List<Customer>();
         private List<Customer> mCountНotifyInvoiceOverdueCustomers = new List<Customer>();
         private List<Customer> mCountNewНotifyNewInvoiceCustomers = new List<Customer>();
+        private List<Customer> mTempFetchCollection = new List<Customer>();
 
         private string listOfCustomersAsJsonString = string.Empty;
         private string categoryID;
@@ -40,7 +44,7 @@ namespace VikRuse
         private string mDate1;
         private string mHour1;
 
-        private string storyBoardAsJsonString;
+    //    private string storyBoardAsJsonString;
 
         public UIStoryboard mStoryboard;
 
@@ -55,18 +59,9 @@ namespace VikRuse
 
         public UILabel MFullUpdateText { get => mFullUpdateDateText; set => mFullUpdateDateText = value; }
 
-       // private UILabel MabonatiObnoveniKum { get => mAbonatiObnoveniKum; set => mAbonatiObnoveniKum = value;}
-    
-         
+        public string mToastText { get; set; }
 
-
-
-        //private UINavigationBar mBar
-        //{
-        //    get { return NavigationItem; }
-        //}
-
-        //   public IntPtr UINavigationBar { get; private set; }
+#endregion
 
         public ViewController()
         {
@@ -78,111 +73,143 @@ namespace VikRuse
 
         }
 
-        public override void ViewWillAppear(bool animated)
+        public ViewController(string mToastText)
         {
-            base.ViewWillAppear(animated);
-
-            GetCustomersSavedInPhone();
-
-
-          //  AppDelegate app = new AppDelegate();
-
-            if (mCustomers.Count != 0)
-            {
-
-                MHour = GetUpdateHour();
-                MDate = GetUpdateDate();
-
-                MFullUpdateText.Text = "Абонати обновени към " + MHour + MDate;
-
-            }
-            else
-            {
-                mFullUpdateDateText.Text = "Моля добавете абонати";
-            }
-
-
-            EmployeesTableView.Source = new EmployeesTableViewSource(mCustomers, Storyboard, this, NavigationController);
-
-            EmployeesTableView.ReloadData();
+            this.mToastText = mToastText;
         }
+
+        //public override void ViewWillAppear(bool animated)
+        //{
+        //    base.ViewWillAppear(animated);
+
+        //    GetCustomersSavedInPhone();
+
+
+        //  //  AppDelegate app = new AppDelegate();
+
+        //    if (mCustomers.Count != 0)
+        //    {
+
+        //        MHour = GetUpdateHour();
+        //        MDate = GetUpdateDate();
+
+        //        MFullUpdateText.Text = "Абонати обновени към " + MHour + MDate;
+
+        //    }
+        //    else
+        //    {
+        //        mFullUpdateDateText.Text = "Моля добавете абонати";
+        //    }
+
+
+        //    EmployeesTableView.Source = new EmployeesTableViewSource(mCustomers, Storyboard, this, NavigationController);
+
+        //    EmployeesTableView.ReloadData();
+        //}
 
         public override void ViewDidLoad()
         {
 
-           base.ViewDidLoad();
+            base.ViewDidLoad();
 
+            RefreshBtn.Enabled = true;
 
-           this.NavigationController.NavigationBar.BarTintColor = UIColor.FromRGB(0, 134, 255);
-           this.NavigationController.NavigationBar.TintColor = UIColor.White;
+            MStoryboard = this.Storyboard;
+            MNavigationController = this.NavigationController;
+
+            this.NavigationController.NavigationBar.BarTintColor = UIColor.FromRGB(0, 134, 255);
+            this.NavigationController.NavigationBar.TintColor = UIColor.White;
 
             // Perform any additional setup after loading the view, typically from a nib.
 
 
             GetCustomersSavedInPhone();
 
+            mCustomers = GetUniqueCustomers();
+
+            SaveDistinctCustomers();
+
+            ShowToast();
+
+            SetUpdateTimeAndHour();
+
+            EmployeesTableView.Source = new EmployeesTableViewSource(mCustomers, Storyboard, this, NavigationController);
+
+
+            EmployeesTableView.RowHeight = UITableView.AutomaticDimension;
+            EmployeesTableView.EstimatedRowHeight = 100f;
+            EmployeesTableView.ReloadData(); 
+
+        }
+
+        private void SetUpdateTimeAndHour()
+        {
             if (mCustomers.Count != 0)
             {
-                //mHour.Text = GetUpdateHour();
-                //mDate.Text = GetUpdateDate();
 
                 MHour = GetUpdateHour();
                 MDate = GetUpdateDate();
 
                 MFullUpdateText.Text = "Абонати обновени към " + MHour + MDate;
 
-               // MFullUpdateText.Text = DateTime.Now.ToShortTimeString();
-
             }
             else
             {
-                //mHour.Hidden = true;
-                //mDate.Hidden = true;
-                // mObnoveniKum.Visibility = ViewStates.Gone;
-
-                //MHour.Enabled = false;
-                //MDate.Enabled = false;
-                //MabonatiObnoveniKum.Text = "Моля добавете абонати";
-
                 mFullUpdateDateText.Text = "Моля добавете абонати";
-
-
             }
-
-
-            EmployeesTableView.Source = new EmployeesTableViewSource(mCustomers, Storyboard, this, NavigationController);
-
-            //   EmployeesTableView.Source = new EmployeesTableViewSource(mCustomers);
-
-            EmployeesTableView.RowHeight = UITableView.AutomaticDimension;
-            EmployeesTableView.EstimatedRowHeight = 100f;
-            EmployeesTableView.ReloadData();
-
-
-
-            //if (OnTapNotificationPressed != null)
-            //{
-            //    OnTapNotificationPressed.Invoke
-            //        (this, new OnTapNotificationCustomEventArgs(Storyboard, this.NavigationController));
-            //}
-
-            MStoryboard = this.Storyboard;
-            MNavigationController = this.NavigationController;
-
-
-            //this.OnTapNotificationPressed += (object sender1, OnTapNotificationCustomEventArgs e) =>
-            //{
-            //    MStoryboard = e.MStoryboard;
-
-            //    mNavigationController = e.MNavigationController;
-
-            //    //var mainActivitiy = mStoryboard.InstantiateViewController("ViewController");
-            //    //this.mNavigationController.PushViewController(mainActivitiy, true);
-
-            //};
         }
 
-        
+        private void ShowToast()
+        {
+            if (mToastText == "сигнал")   //mToastText != string.Empty && mToastText != null
+            {
+                InvokeOnMainThread(() =>
+                {
+                    BTProgressHUD.Dismiss();
+
+                    //  BTProgressHUD.ShowToast("Успешно изпратихте сигнал", false, 15000); 
+                    BTProgressHUD.ShowToast("Успешно изпратихте сигнал", ProgressHUD.ToastPosition.Bottom, 8000);
+
+                });
+            }
+
+            if (mToastText == "абонат")
+            {
+                // InvokeOnMainThread(() =>
+                //  {
+                //  BTProgressHUD.ShowToast("Успешно изпратихте сигнал", false, 15000); 
+                BTProgressHUD.ShowToast("Успешно добавихте абонат", ProgressHUD.ToastPosition.Bottom, 8000);
+
+                //var signal = new SignalForAccidentController();
+                //signal.ShowToast("Успешно добавихте абонат", View);
+                //  });
+            }
+        }
+
+        private void SaveDistinctCustomers()
+        {
+            var listOfCustomersAsJson = JsonConvert.SerializeObject(mCustomers);
+            File.WriteAllText(mCustomersFilename, listOfCustomersAsJson);
+        }
+
+        private List<Customer> GetUniqueCustomers()
+        {
+            
+            List<Customer> distinctCustomers = new List<Customer>();
+
+            // distinctCustomers = mCustomers.Distinct().ToList();
+
+            if(mCustomers.Count != 0)
+            {
+                distinctCustomers = mCustomers.
+                                            GroupBy(c => c.Nomer).
+                                            Select(c => c.FirstOrDefault()).
+                                            ToList();
+            }
+
+            return distinctCustomers;
+        }
+
 
         public  string GetUpdateDate()
         {
@@ -205,7 +232,7 @@ namespace VikRuse
                 }
                 return newDate;
             }
-            catch(Exception e)
+            catch(Exception )
             {
                 string format = "dd.MM.yyyy";
 
@@ -240,36 +267,34 @@ namespace VikRuse
 
             return newHour + " часа, ";
             }
-            catch(Exception e)
+            catch(Exception )
             {
                 string DateFormatt = "HH:mm";
                 return DateTime.Now.ToString(DateFormatt) + " часа, ";
             }
         }
 
-        //public void OnTapNotification(OnTapNotificationCustomEventArgs e)
-        //{
-        //    if (OnTapNotificationPressed != null)
-        //    {
-        //        OnTapNotificationPressed.Invoke(this, new OnTapNotificationCustomEventArgs(Storyboard, this.NavigationController));
-        //    }
-        //}
-
-      
-
         private void GetCustomersSavedInPhone()
         {
+           //listOfCustomersAsJsonString = File.ReadAllText(mCustomersFilename);
             try
             {
                 listOfCustomersAsJsonString = File.ReadAllText(mCustomersFilename);
 
-                if (listOfCustomersAsJsonString == null || listOfCustomersAsJsonString == string.Empty)
+                if (listOfCustomersAsJsonString == null || listOfCustomersAsJsonString == string.Empty || listOfCustomersAsJsonString == "[]")
                 {
                     mCustomers = new List<Customer>();
                 }
                 else
                 {
-                    mCustomers = JsonConvert.DeserializeObject<List<Customer>>(listOfCustomersAsJsonString);
+                   // var tempcustomers = new List<Customer>();
+                      mCustomers = JsonConvert.DeserializeObject<List<Customer>>(listOfCustomersAsJsonString).Distinct().ToList();
+
+                   // tempcustomers = JsonConvert.DeserializeObject<List<Customer>>(listOfCustomersAsJsonString).Distinct().ToList();
+
+                //    mCustomers = GetUniqueCustomers();
+
+
                 }
 
                 if (mCustomers == null)
@@ -277,15 +302,15 @@ namespace VikRuse
                     mCustomers = new List<Customer>();
                 }
             }
-            catch (Exception e)
+            catch (Exception )
             {
-                if (listOfCustomersAsJsonString == null)
+                if (listOfCustomersAsJsonString == null || listOfCustomersAsJsonString == string.Empty || listOfCustomersAsJsonString == "[]")
                 {
                     mCustomers = new List<Customer>();
                 }
                 else
                 {
-                    mCustomers = JsonConvert.DeserializeObject<List<Customer>>(listOfCustomersAsJsonString);
+                    mCustomers = JsonConvert.DeserializeObject<List<Customer>>(listOfCustomersAsJsonString).Distinct().ToList();
                 }
 
                 if (mCustomers == null)
@@ -294,14 +319,6 @@ namespace VikRuse
                 }
             }
         }
-
-
-        //partial void UIButton2989_TouchUpInside(UIButton sender)
-        //{
-        //    var detailViewController = Storyboard.InstantiateViewController("DetailView");
-        //    detailViewController.ModalPresentationStyle = UIModalPresentationStyle.OverCurrentContext;
-        //    PresentViewController(detailViewController, true, null);
-        //}
 
         partial void Camera_Activated(UIBarButtonItem sender)
         {
@@ -318,42 +335,12 @@ namespace VikRuse
             this.NavigationController.PushViewController(addCustomer, true);
         }
 
-        partial void SetnNotification(UIButton sender)
-        {
+        //partial void SetnNotification(UIButton sender)
+        //{
 
-            //UserNotificationCenterDelegate userNotificationDelegate =
-            //  new UserNotificationCenterDelegate(this.MStoryboard, this.MNavigationController);
+        //    CreateNotification();
 
-            //userNotificationDelegate.mStoryboard = this.Storyboard;
-            //userNotificationDelegate.mNavigationController = this.NavigationController;
-
-            //List<UserNotificationCenterDelegate> list = new List<UserNotificationCenterDelegate>();
-
-            //list.Add(userNotificationDelegate);
-
-            //var userNotificationDelegateAsJSON = JsonConvert.SerializeObject(list);
-            //File.WriteAllText(mNotificationFileName, userNotificationDelegateAsJSON);
-
-
-            //userNotificationDelegate.OnTapNotificationPressed += (object sender1, OnTapNotificationCustomEventArgs e) =>
-            //{
-            //    MStoryboard = e.MStoryboard;
-
-            //    MNavigationController = e.MNavigationController;
-
-            //    //var mainActivitiy = mStoryboard.InstantiateViewController("ViewController");
-            //    //this.mNavigationController.PushViewController(mainActivitiy, true);
-
-            //};
-
-
-            /////////////////////////////////////
-          //  RegisterForNotifications();
-
-            CreateNotification();
-  
-
-        }
+        //}
 
         void RegisterForNotifications()
         {
@@ -421,23 +408,32 @@ namespace VikRuse
             });
         }
 
+      
+
         partial void RefreshBtn_Activated(UIBarButtonItem sender)
         {
-            // RunOnUiThread(() => { ShowProgressDialog(); });
+          
 
-            //Show a HUD with a progress spinner and the text
-            BTProgressHUD.Show("Обновяване");
+            RefreshBtn.Enabled = false;
 
+            // BTProgressHUD.Show("Обновяване");
+
+          //  BTProgressHUD.ShowContinuousProgress("Обновяване", ProgressHUD.MaskType.Black);
 
             Thread thread = new Thread(RefreshCustomers);
 
             thread.Start();
+
         }
 
         private void RefreshCustomers()
         {
+          //  BTProgressHUD.ShowToast("Обновяване ", false, 3000);
+
             GetCustomersSavedInPhone();
-            
+
+            mCustomers = GetUniqueCustomers();
+
             //chek if there is no customers to refrsh
             if (mCustomers.Count == 0)
             {
@@ -446,41 +442,49 @@ namespace VikRuse
                 ///////
                 InvokeOnMainThread(() =>
                 {
-                    RefreshProgressDialogAndToatWhenThereIsNoCustomers();
-                });
+                   // RefreshProgressDialogAndToatWhenThereIsNoCustomers();
 
-                return;
+                    BTProgressHUD.Dismiss();
+
+                    MFullUpdateText.Text = "Моля добавете абонати";
+
+                    RefreshBtn.Enabled = true;
+                }); 
+
+              //  return;
             }
             else if (mCustomers.Count != 0)
             {
-                UpdateCustomers(mCustomers);
+                 UpdateCustomersAsync(mCustomers);
 
                // BTProgressHUD.Dismiss();
             }
         }
-        private void RefreshProgressDialogAndToatWhenThereIsNoCustomers()
-        {
-            //mHour.Hidden = true ;
-            //mDate.Hidden = true;
-            // mObnoveniKum.Visibility = ViewStates.Gone;
+        //private void RefreshProgressDialogAndToatWhenThereIsNoCustomers()
+        //{
+        //    //mHour.Hidden = true ;
+        //    //mDate.Hidden = true;
+        //    // mObnoveniKum.Visibility = ViewStates.Gone;
 
-            //MabonatiObnoveniKum.Text = "Моля добавете абонати";
+        //    //MabonatiObnoveniKum.Text = "Моля добавете абонати";
 
-            BTProgressHUD.Dismiss();
+        //    BTProgressHUD.Dismiss();
 
-            MFullUpdateText.Text = "Моля добавете абонати";
+        //    MFullUpdateText.Text = "Моля добавете абонати";
 
-            //  progress.Dismiss();
-        }
+        //    //  progress.Dismiss();
+        //}
 
-        private void UpdateCustomers(List<Customer> mCustomers) //, ISharedPreferences pref)
+        private void UpdateCustomersAsync(List<Customer> mCustomers) // async Task                                     , ISharedPreferences pref)
         {
             ConnectToApi connectToApi = new ConnectToApi();
 
             bool connection = connectToApi.CheckConnectionOfVikSite();
+           // bool connection = false;
 
             if (connection == true)
             {
+                InvokeOnMainThread(() => { BTProgressHUD.ShowContinuousProgress("Обновяване", ProgressHUD.MaskType.Black); });
 
                 EncryptConnection encryp = new EncryptConnection();
 
@@ -524,6 +528,11 @@ namespace VikRuse
                     }
                 }
 
+                foreach (var item in mCustomers)
+                {
+                    mTempFetchCollection.Add(item);
+                }
+
                 foreach (var customer in mCustomers)
                 {
                     bool isReceiveNotifyNewInvoiceCheck = false;
@@ -545,32 +554,38 @@ namespace VikRuse
                     /// !!!!!!!!!!!!!!!!!!!!!!!!
                     // string realUrl = ConnectToApi.urlAPI + "api/abonats/" + crypFinalPass + "/" + billNumber + "/" + egn;
 
-                     string realUrl = ConnectToApi.urlAPI + "api/abonats/" + crypFinalPass + "/" + billNumber + "/" + egn + "/" + ConnectToApi.updateByButtonRefresh + "/";
-                    // string realUrl = "http://192.168.2.222/VIKWebApi/" + "api/abonats/" + crypFinalPass + "/" + billNumber + "/" + egn + "/"
-                    // + ConnectToApi.updateByButtonRefresh + "/";
+                    //string realUrl = ConnectToApi.urlAPI + "api/abonats/" + crypFinalPass + "/" + billNumber + "/" + egn + "/" + ConnectToApi.updateByButtonRefresh + "/";
 
-                    //string realUrl = ConnectToApi.urlAPI + "api/abonats/" + crypFinalPass + "/" + billNumber + "/" + egn + "/"
-                    //              + ConnectToApi.updateByAddCutomerButton + "/"
-                    //              + isReceiveNotifyNewInvoiceCheck + "/" + isReceiveNotifyInvoiceOverdueCheck + "/" + isReciveNotifyReadingCheck + "/";
+
+                    //string realUrl = "https://192.168.2.222/VIKWebApi/" + "api/abonats/" + crypFinalPass + "/" + billNumber + "/" + egn + "/"
+                    //+ ConnectToApi.updateByButtonRefresh + "/"
+                    //+ isReceiveNotifyNewInvoiceCheck + "/" + isReceiveNotifyInvoiceOverdueCheck + "/" + isReciveNotifyReadingCheck + "/";
+
+                    string realUrl = ConnectToApi.urlAPI + "api/abonats/" + crypFinalPass + "/" + billNumber + "/" + egn + "/"
+                                  + ConnectToApi.updateByButtonRefresh + "/"
+                                  + isReceiveNotifyNewInvoiceCheck + "/" + isReceiveNotifyInvoiceOverdueCheck + "/" + isReciveNotifyReadingCheck + "/";
+
 
 
                     var jsonResponse = connectToApi.FetchApiDataAsync(realUrl);
-                   // string jsonResponse = null;
+                    // string jsonResponse = null;
+
+                    mTempFetchCollection.Remove(customer);
 
                     //check the api
                     if (jsonResponse == null)
                     {
-                       // RunOnUiThread(() => RefreshProgressDialogAndToastWhenNoConnectioToApi());
-
-                        return;
+                        // RunOnUiThread(() => RefreshProgressDialogAndToastWhenNoConnectioToApi());
+                        mAllUpdateCustomerFromApi.Add(customer);
+                        // return;
                     }
 
                     // check in vikSite is there a customer with this billNumber (is billNumber correct)
                     else if (jsonResponse == "[]")
                     {
-                      //  RefreshProgressDialogAndToastWhenInputIsNotValid();
-
-                        return;
+                        //  RefreshProgressDialogAndToastWhenInputIsNotValid();
+                        mAllUpdateCustomerFromApi.Add(customer);
+                        // return;
                     }
 
                     // check is billNumber correct and get and save customer in phone
@@ -586,49 +601,30 @@ namespace VikRuse
                             updateCutomerButNoNotify.NotifyNewInvoice = customer.NotifyNewInvoice;
                             updateCutomerButNoNotify.NotifyReading = customer.NotifyReading;
 
-                            //if (updateCutomerButNoNotify.ReceiveNotifyInvoiceOverdueToday == true)
-                            //{
-                            //    updateCutomerButNoNotify.ReceiveNotifyInvoiceOverdueToday = true;
-                            //}
-                            //else
-                            //{
-                            //    updateCutomerButNoNotify.ReceiveNotifyInvoiceOverdueToday = customer.ReceiveNotifyInvoiceOverdueToday;
-                            //}
-
-                            //if (updateCutomerButNoNotify.ReceiveNotifyNewInvoiceToday == true)
-                            //{
-                            //    updateCutomerButNoNotify.ReceiveNotifyNewInvoiceToday = true;
-                            //}
-                            //else
-                            //{
-                            //    updateCutomerButNoNotify.ReceiveNotifyNewInvoiceToday = customer.ReceiveNotifyNewInvoiceToday;
-                            //}
-
-                            //if (updateCutomerButNoNotify.ReciveNotifyReadingToday == true)
-                            //{
-                            //    updateCutomerButNoNotify.ReciveNotifyReadingToday = true;
-                            //}
-                            //else
-                            //{
-                            //    updateCutomerButNoNotify.ReciveNotifyReadingToday = customer.ReciveNotifyReadingToday;
-                            //}
-
                             mAllUpdateCustomerFromApi.Add(updateCutomerButNoNotify);     ////////////updateCutomerButNoNotify
-
-
                         }
-
-
                         else
                         {
-                            InvokeOnMainThread(() =>
-                            {
-                                BTProgressHUD.Dismiss();
-                               // RefreshProgressDialogAndToastWhenNoConnectioToApi();
+                            mAllUpdateCustomerFromApi.Add(customer);
 
+                            InvokeOnMainThread(async () =>
+                            {
+                                // RefreshProgressDialogAndToastWhenNoConnectioToApi();
+
+                                BTProgressHUD.ShowToast("Грешка при извличане на данните", false, 3000);
+
+                                async Task LongRunningOperation()
+                                {
+                                    await Task.Delay(3000);
+
+                                    BTProgressHUD.Dismiss();
+                                }
+
+                                await LongRunningOperation();
+     
                             });
 
-                            return;
+                            //return;
                         }
                     }
                     // }
@@ -656,11 +652,11 @@ namespace VikRuse
 
                     SaveUpdatesInPhone(MDate.ToString(), MHour.ToString());
 
-                    this.ViewWillAppear(true);
+                    // this.ViewWillAppear(true);
 
-                    //ViewController mainScreeen = this.Storyboard.InstantiateViewController("ViewController") as ViewController;
+                    ViewController mainScreeen = this.Storyboard.InstantiateViewController("ViewController") as ViewController;
 
-                    //this.NavigationController.PushViewController(mainScreeen, true);
+                    this.NavigationController.PushViewController(mainScreeen, true);
                 });
        
 
@@ -674,16 +670,27 @@ namespace VikRuse
                 InvokeOnMainThread(() =>
                 {
                     BTProgressHUD.Dismiss();
-                });
 
+                    RefreshBtn.Enabled = true;
+                });
 
             }
             else
             {
-                //   InvokeOnMainThread(() => RefreshProgresDialogAndToastWhenThereIsNoConnection());
-                BTProgressHUD.Dismiss();
 
-                return;
+               // BTProgressHUD.Dismiss();
+
+                //RefreshProgresDialogAndToastWhenThereIsNoConnection()
+                InvokeOnMainThread(() =>
+                {
+                    //  BTProgressHUD.ShowToast("Проверете интернет връзката", ProgressHUD.ToastPosition.Bottom, 3000);
+
+                    BTProgressHUD.ShowToast("Проверете интернет връзката", ProgressHUD.MaskType.Gradient, false, 3000);
+
+                    RefreshBtn.Enabled = true;
+                });
+
+               
             }
         }
 
@@ -805,7 +812,7 @@ namespace VikRuse
                 // Create content
                 var content = new UNMutableNotificationContent();
 
-                content.Title = "Нова Просрочване";
+                content.Title = "Просрочване";
 
                 List<string> notificationContent = new List<string>();
 

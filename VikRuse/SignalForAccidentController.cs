@@ -9,11 +9,15 @@ using UIKit;
 using System.Net.Http;
 using System.Net;
 using System.IO;
+using BigTed;
+using System.Threading;
+using Xamarin.Forms;
 
 namespace VikRuse
 {
     public partial class SignalForAccidentController : UIViewController
     {
+        #region Fields
         private  UIImagePickerController imagePickerForGallery;
 
         private UIImagePickerController imagePickerForCamera;
@@ -22,7 +26,7 @@ namespace VikRuse
 
         private string apiCommand = "api/postimage";
 
-        private UIAlertView alert;
+       // private UIAlertView alert;
 
         private MultipartFormDataContent form;
 
@@ -40,33 +44,13 @@ namespace VikRuse
 
         private Stream stream;
 
-       // private UIImageView pic;
-
-        // private UIImageView pic = null;
-
-        // private Button addPicFromGalary;
-        //  private Button addPicFromCamera;
-        // private Button sent;
-        //  private ImageView pic;
-        // private Bitmap picImage;
-        //  private Android.Telephony.TelephonyManager mTelephonyMgr;
-
-        //private UITextField mCity;
-        //private UITextField mAddress;
-        //private UITextField mDescription;
-        //private UITextField mFullName;
-        //private UITextField mPhoneNumber;
-
-
         private string mFinalCryptPassword;
 
-        private bool mIsFromGalleryPressed;
-       // private Android.Support.V7.Widget.Toolbar mToolBar;
-      //  private TextView mError;
+     //   private bool mIsFromGalleryPressed;
 
-        private Uri mSaveImageUri; // Uri
+      //  private Uri mSaveImageUri; // Uri
 
-
+        private bool isPicImagNull;
 
 
         private UINavigationItem mNavBar { get; set; }
@@ -77,6 +61,8 @@ namespace VikRuse
         public UITextField MPhoneNumber { get => this.mPhoneNumber; set => this.mPhoneNumber = value; }
         public UIImageView Pic { get => this.pic; set => this.pic = value; }
 
+#endregion
+
         public SignalForAccidentController (IntPtr handle) : base (handle)
         {
 
@@ -85,6 +71,11 @@ namespace VikRuse
         public SignalForAccidentController(UINavigationItem mNavBar)
         {
             this.mNavBar = mNavBar;
+        }
+
+        public SignalForAccidentController()
+        {
+
         }
 
         //public override void ViewDidAppear(bool animated)
@@ -166,33 +157,31 @@ namespace VikRuse
                 textField.ResignFirstResponder();
                 return true;
             };
+
+            // this.MPhoneNumber.ResignFirstResponder();
+
+            var g = new UITapGestureRecognizer(() => View.EndEditing(true));
+            g.CancelsTouchesInView = false; //for iOS5
+            View.AddGestureRecognizer(g);
+
         }
 
         private void Sent_Click()
         {
+            
            
             InvokeOnMainThread(() =>
             {
                 mError.Text = string.Empty;
                 mError.Hidden = true;
+
+                Showrogress();
             });
 
-            // InvokeOnMainThread(() => { ShowProgressDialog(); });
 
-            //  SentAccindentSignelToApi();
+            Thread thread = new Thread(SentAccindentSignelToApiAsync);
+            thread.Start();
 
-             SentAccindentSignelToApiAsync();
-
-            //Thread thread = new Thread(SentAccindentSignelToApiAsync);
-            //thread.Start();
-
-
-
-
-            //BeginInvokeOnMainThread(() =>
-            //{
-            //    SentAccindentSignelToApi();
-            //});
         }
 
     
@@ -202,11 +191,11 @@ namespace VikRuse
             ConnectToApi connectToApi = new ConnectToApi();
 
              connection = connectToApi.CheckConnectionOfVikSite();
-
+          //  connection = false;
         //    bool isDataValidated = false;
 
-          //  InvokeOnMainThread(() =>
-           // {
+            InvokeOnMainThread(() =>
+            {
             isDataValidated =
 
             MCity.Text.Trim().Length > 0
@@ -214,7 +203,7 @@ namespace VikRuse
             && MDescription.Text.Trim().Length > 0
             && MPhoneNumber.Text.Trim().Length > 0
             && MFullName.Text.Trim().Length > 0;
-            //});
+            });
 
             if (isDataValidated)
             {
@@ -233,8 +222,25 @@ namespace VikRuse
                 #endregion
                 if (connection == true)
                 {
-                   // if (mSaveImageUri != null)
-                    if (Pic.Image!= null)
+ 
+                    InvokeOnMainThread(() => 
+                    {
+                        //Showrogress();
+             
+                           if (Pic.Image == null)
+                            {
+                                isPicImagNull = true;
+                            }
+                           else
+                            {
+                            isPicImagNull = false;
+                            }
+                    });
+                    //Thread thread = new Thread(Showrogress);
+
+                    //thread.Start();
+                    // if (mSaveImageUri != null)
+                    if (isPicImagNull == false)  // Pic.Image != null
                     {
 
                         //var stream = new StreamReader(stream);
@@ -243,72 +249,75 @@ namespace VikRuse
 
                         // NSInputStream stream = new NSInputStream(pic.Image);
 
-                         stream = Pic.Image.AsJPEG().AsStream();   //AsPNG().AsStream();
+
+                        //stream = Pic.Image.AsJPEG().AsStream();   //AsPNG().AsStream();
+
+                        //InvokeOnMainThread(()=>
+                        //    {
+                        //        stream = Pic.Image.AsJPEG().AsStream();   //AsPNG().AsStream();
+                        //    }
+                        // );
 
                         //NSInputStream stream =  new NSInputStream(mSaveImageUri);
-                        PostAccidentToDB(stream);
 
+                        InvokeOnMainThread(() =>
+                        {
+                            stream = Pic.Image.AsJPEG().AsStream();   //AsPNG().AsStream();
+                            PostAccidentToDB(stream);
+                        }
+                        );
 
+                        //PostAccidentToDB(stream);
 
                     }
                     //else if(pic.Image == null)
                     else
                     {
-                         stream = null;
-                        PostAccidentToDB(stream);
-
-                        //InvokeOnMainThread(() =>
-                        //{
-                        //    Stream stream = null;
-                        //    PostAccidentToDB(stream);
-                        //});
+                        stream = null;
+                        InvokeOnMainThread(() =>
+                        {
+                            PostAccidentToDB(stream);
+                        }
+                       );
+                        // PostAccidentToDB(stream);
 
                     }
-                    //else
-                    //{
-                    //    PostAccidentToDBwithoutImage();
-                    //}
                 }
                 else
                 {
                     // InvokeOnMainThread(() => RefreshProgressDialogAndToastWhenThereIsNoInternet());
+                    InvokeOnMainThread(() =>
+                    {              
+                        mError.Hidden = false;
+                        mError.Text = "Проверете интернет връзката";
+
+                        BTProgressHUD.Dismiss();
+                    });
                 }
             }
             else
             {
-                // progress.Dismiss();
-
-                // Looper.Prepare();
-                //Toast.MakeText(this, "Попълнете полетата", ToastLength.Long);
-
-
 
                 InvokeOnMainThread(() =>
                 {
                     UpdateError();
                 });
-
-                //new System.Threading.Thread(new System.Threading.ThreadStart(() =>
-                //{
-                //    InvokeOnMainThread(() =>
-                //    {
-                //        UpdateError();
-                //    });
-                //})).Start();
+   
             }
         }
 
-        
+        private  void Showrogress()
+        {
+            BTProgressHUD.ShowContinuousProgress("Изпращане на сигнал ...", ProgressHUD.MaskType.Black);
+        }
+
 
         private void UpdateError()
         {
-            // progress.Dismiss();
-
-            //  Looper.Prepare();
-            //Toast.MakeText(this, "Попълнете полетата", ToastLength.Long);
-
-            mError.Text = "Попълнете полетата";
+            mError.Text = "Попълнете задължителните полета";
             mError.Hidden = false;
+
+            BTProgressHUD.Dismiss();
         }
 
         private object RefreshProgressDialogAndToastWhenThereIsNoInternet()
@@ -340,9 +349,8 @@ namespace VikRuse
 
 
 
-                    //   InvokeOnMainThread(() =>
-                    //  {
-
+                    //  InvokeOnMainThread(() =>
+                     // {
                     //   MultipartFormDataContent form = new MultipartFormDataContent();
 
                     if (stream != null)
@@ -375,7 +383,8 @@ namespace VikRuse
 
                     //   });
 
-                    //real url
+                    /////////////////real url
+                    //client.DownloadFileTaskAsync(new Uri(DownloadUrl), FileName);
                     response = client.PostAsync(ConnectToApi.urlAPI + apiCommand, form).Result;
 
                     // test url
@@ -383,16 +392,45 @@ namespace VikRuse
                     //< key > NSAllowsArbitraryLoads </ key >
                     //< true />   
 
-                    //string testUrl ="http://192.168.2.222/VIKWebApi/api/postimage";
-                    //response = client.PostAsync(testUrl, form).Result ;
+                    //string testUrl = "http://192.168.2.222/VIKWebApi/api/postimage";
+                    //response = client.PostAsync(testUrl, form).Result;
                     //  response= await client.SendAsync(request);
 
-                   
+
                     if (response.StatusCode == HttpStatusCode.OK)  // response.IsSuccessStatusCode
                     {
-  
-                        var mainActivitiy = Storyboard.InstantiateViewController("ViewController");
-                        this.NavigationController.PushViewController(mainActivitiy, true);
+
+                        InvokeOnMainThread(() =>
+                        {
+                            BTProgressHUD.Dismiss();
+                            BTProgressHUD.Dismiss();
+                            BTProgressHUD.Dismiss();
+
+                            ViewController mainScreeen = this.Storyboard.InstantiateViewController("ViewController") as ViewController;
+                            mainScreeen.mToastText = "сигнал";  //Успешно изпратихте сигнал
+
+                            if (mainScreeen != null)
+                            {
+                                this.NavigationController.PushViewController(mainScreeen, true);
+                            }
+
+                        });
+
+                        // BTProgressHUD.Dismiss();
+
+                        //// var var =  BTProgressHUD.ShowToast("Успешно изпратихте сигнал", false, 3000);
+
+                        // var mainActivitiy = Storyboard.InstantiateViewController("ViewController");
+
+                        // this.NavigationController.PushViewController(mainActivitiy, true);
+
+                        // InvokeOnMainThread(() =>
+                        // {
+                        //      BTProgressHUD.ShowToast("Успешно изпратихте сигнал", false, 3000);
+                        //     //ShowToast("Успешно изпратихте сигнал", View);
+                        // });
+
+                        // BTProgressHUD.Dismiss();
                     }
                     //HttpResponseMessage response = 
                     //   client.PostAsync("http://192.168.2.222/VIKWebApi/api/postimage", form).Result;
@@ -400,38 +438,54 @@ namespace VikRuse
                     {
                         InvokeOnMainThread(() =>
                         {
-                                //Toast.MakeText(this, "Възникна грешка при изпращане", ToastLength.Long).Show();
-                                //progress.Dismiss();
-                                //mError.Text = "Възникна грешка при изпращане";
-                                //mError.Visibility = ViewStates.Visible;
-
                                 mError.Text = "Възникна грешка при изпращане";
-                            mError.Hidden = false;
+                                mError.Hidden = false;
+
+                                BTProgressHUD.Dismiss();
                         }
                         );
                     }
 
-
-
                 }
-                catch (Exception ex)
+                catch (Exception )
                 {
                     InvokeOnMainThread(() =>
                     {
-                        //Toast.MakeText(this, "Възникна грешка при изпращане", ToastLength.Long).Show();
-                        //progress.Dismiss();
-                        //mError.Text = "Възникна грешка при изпращане";
-                        //mError.Visibility = ViewStates.Visible;
 
-                        // mError.Text = "Възникна грешка при изпращане";
-                        mError.Text = $"{ex.ToString()}";
+                         mError.Text = "Възникна грешка при изпращане";
+                       // mError.Text = $"{ex.ToString()}";
                         mError.Hidden = false;
+
+                        BTProgressHUD.Dismiss();
                     }
                     );
                 }
             }
         }
 
+        public void ShowToast(String message, UIView view)
+        {
+            UIView residualView = view.ViewWithTag(1989);
+            if (residualView != null)
+                residualView.RemoveFromSuperview();
+
+            var viewBack = new UIView(new CoreGraphics.CGRect(83, 0, 300, 100));
+            viewBack.BackgroundColor = UIColor.Black;
+            viewBack.Tag = 1989;
+            UILabel lblMsg = new UILabel(new CoreGraphics.CGRect(0, 20, 300, 60));
+            lblMsg.Lines = 1;
+            lblMsg.Text = message;
+            lblMsg.TextColor = UIColor.White;
+            lblMsg.TextAlignment = UITextAlignment.Center;
+            viewBack.Center = view.Center;
+            viewBack.AddSubview(lblMsg);
+            view.AddSubview(viewBack);
+            //roundtheCorner(viewBack);
+            UIView.BeginAnimations("Toast");   ///Успешно изпратихте сигнал
+            UIView.SetAnimationDuration(3.0f);
+            viewBack.Alpha = 0.0f;
+            UIView.CommitAnimations();
+        }
         private void ShowProgressDialog()
         {
             throw new NotImplementedException();
@@ -466,10 +520,19 @@ namespace VikRuse
 
             //Add event handlers when user finished Capturing image or Cancel
             imagePickerForCamera.FinishedPickingMedia += Handle_FinishedPickingMedia;
-            imagePickerForCamera.Canceled += Handle_Canceled;
+            imagePickerForCamera.Canceled += ImagePickerForCamera_Canceled;
+           // imagePickerForCamera.Canceled += Handle_Canceled;
+
 
             // show the picker
             NavigationController.PresentModalViewController(imagePickerForCamera, true);
+        }
+
+        private void ImagePickerForCamera_Canceled(object sender, EventArgs e)
+        {
+            imagePickerForCamera.DismissModalViewController(true);
+
+            selectImageFromCamera = false;
         }
 
         private void SelectImageFromGallery()
@@ -484,22 +547,28 @@ namespace VikRuse
             imagePickerForGallery.MediaTypes = UIImagePickerController.AvailableMediaTypes(UIImagePickerControllerSourceType.PhotoLibrary);
 
             imagePickerForGallery.FinishedPickingMedia += Handle_FinishedPickingMedia;
-            imagePickerForGallery.Canceled += Handle_Canceled;
+            imagePickerForGallery.Canceled += ImagePickerForGallery_Canceled;
+          //  imagePickerForGallery.Canceled += Handle_Canceled;
 
             // show the picker
             NavigationController.PresentModalViewController(imagePickerForGallery, true);
             //UIPopoverController picc = new UIPopoverController(imagePicker);
         }
 
-        private void Handle_Canceled(object sender, EventArgs e)
+        private void ImagePickerForGallery_Canceled(object sender, EventArgs e)
         {
-            if(selectImageFromCamera == true)
-            {
-                imagePickerForCamera.DismissModalViewController(true);
-            }
-            else
             imagePickerForGallery.DismissModalViewController(true);
         }
+
+        //private void Handle_Canceled(object sender, EventArgs e)
+        //{
+        //    if(selectImageFromCamera == true)
+        //    {
+        //        imagePickerForCamera.DismissModalViewController(true);
+        //    }
+        //    else
+        //    imagePickerForGallery.DismissModalViewController(true);
+        //}
 
         protected void Handle_FinishedPickingMedia(object sender, UIImagePickerMediaPickedEventArgs e)
         {
@@ -542,25 +611,20 @@ namespace VikRuse
                    // mSaveImageUri = fdsf ;
                 }
             }
-            //else
-            //{ // if it's a video
-            //  // get video url
-            //    NSUrl mediaURL = e.Info[UIImagePickerController.MediaURL] as NSUrl;
-            //    if (mediaURL != null)
-            //    {
-            //        Console.WriteLine(mediaURL.ToString());
-            //    }
-            //}
 
             // dismiss the picker
 
             if (selectImageFromCamera == true)
             {
                 imagePickerForCamera.DismissModalViewController(true);
+   
             }
             else
+            {
                 imagePickerForGallery.DismissModalViewController(true);
-            //imagePickerForGallery.DismissModalViewController(true);
+            }
+
+            selectImageFromCamera = false;
         }
 
        

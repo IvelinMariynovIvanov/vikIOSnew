@@ -40,7 +40,14 @@ namespace VikRuse
 
         public void UpdateCell(Customer currentEmployee)
         {
+            SetLabelColors(currentEmployee);
 
+            SetLabelText(currentEmployee);
+
+        }
+
+        private void SetLabelText(Customer currentEmployee)
+        {
             BillNumber.Text = currentEmployee.Nomer;
 
             Address.Text = currentEmployee.Address;
@@ -57,7 +64,7 @@ namespace VikRuse
 
             OldBillLabel.Text = "старо задължение";
 
-            OldBillLValue.Text = currentEmployee.OldBill.ToString("N2") +" лв";
+            OldBillLValue.Text = currentEmployee.OldBill.ToString("N2") + " лв";
 
             ReportDateLabel.Text = "дата на отчитане: ";
 
@@ -72,76 +79,46 @@ namespace VikRuse
                              currentEmployee.StartReportDate.ToShortTimeString() + "-" +
                              currentEmployee.EndReportDate.ToShortTimeString();
             }
+        }
 
+        private void SetLabelColors(Customer currentEmployee)
+        {
+            //if (currentEmployee.ReceiveNotifyInvoiceOverdueToday == true)
+            //{
+            //    MoneyToPayValue.TextColor = UIColor.Red.ColorWithAlpha(alpha: 0.8f);
 
+            //    EnddateValue.TextColor = (UIColor.Red);
+            //}
+            //else if (currentEmployee.ReceiveNotifyInvoiceOverdueToday == false)
+            //{
+            //    MoneyToPayValue.TextColor = UIColor.Green.ColorWithAlpha(0.8f);
+            //}
 
-            if (currentEmployee.ReceiveNotifyInvoiceOverdueToday == true)
+            if (currentEmployee.OldBill != 0)
             {
-                MoneyToPayValue.TextColor = UIColor.Red.ColorWithAlpha(alpha: 0.8f);
-
-                EnddateValue.TextColor = (UIColor.Red);
-            }
-            else if (currentEmployee.ReceiveNotifyInvoiceOverdueToday == false)
-            {
-                MoneyToPayValue.TextColor = UIColor.Green.ColorWithAlpha(0.8f);
+                OldBillLValue.TextColor = UIColor.Red.ColorWithAlpha(alpha: 0.8f); //(UIColor.Red);
             }
 
             if (currentEmployee.MoneyToPay == 0)
             {
                 MoneyToPayValue.TextColor = (UIColor.Black);
             }
-
-            if (currentEmployee.ReciveNotifyReadingToday == true)
-            {
-                ReportDateValue.TextColor = (UIColor.Red);
-            }
-            if (currentEmployee.ReceiveNotifyNewInvoiceToday == true)
+            if (currentEmployee.MoneyToPay != 0)
             {
                 MoneyToPayValue.TextColor = UIColor.Green.ColorWithAlpha(0.8f);
             }
 
 
-            //  ReportDateValue.Text = currentEmployee.StartReportDate.ToString();
+            if (currentEmployee.ReciveNotifyReadingToday == true)
+            {
+                ReportDateValue.TextColor = (UIColor.Red);
+            }
 
-
-
-            //DeleteButton = DeleteBtn;
-
-            //EditButton = EditButton;
-
-            //  EditButton.TouchInside += (object sender, EventArgs e) => { };
-
-            //var gradientLayer = new CAGradientLayer();
-            ////#01579b, #3187cb
-            //gradientLayer.Colors = new[] { UIColor.Red.CGColor, UIColor.Blue.CGColor };
-            //gradientLayer.Locations = new NSNumber[] { 0, 1 };
-
-            //// gradientLayer.Frame = this.Frame;
-            //gradientLayer.Frame = HorizontalLine.Frame;
-
-            //HorizontalLine.BackgroundColor = UIColor.Clear;
-            //HorizontalLine.Layer.AddSublayer(gradientLayer);
-            //HorizontalLine.Layer.InsertSublayer(gradientLayer, 1);
-
-            ////gradientLayer.StartPoint = CGPointMake(0.0, 0.5);
-            ////gradientLayer.EndPoint = CGPointMake(1.0, 0.5);
-
-            ////HorizontalLine.Frame = this.Frame;
-
-
-
+            //if (currentEmployee.ReceiveNotifyNewInvoiceToday == true)
+            //{
+            //    MoneyToPayValue.TextColor = UIColor.Green.ColorWithAlpha(0.8f);
+            //}
         }
-
-       
-
-        //partial void DeleteButton_TouchUpInside(UIButton sender)
-        //{
-        //    var detailViewController = Storyboard.InstantiateViewController("DetailView");
-        //    detailViewController.ModalPresentationStyle = UIModalPresentationStyle.OverCurrentContext;
-        //    PresentViewController(detailViewController, true, null);
-        //}
-
-
 
     }
 }

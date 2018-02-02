@@ -10,41 +10,10 @@ using System.Globalization;
 
 namespace VikRuse
 {
-    //public class OnEditCustomerEventArgs : EventArgs
-    //{
-    //    private bool isThereANewCharge;
-    //    private bool isThereALateBill;
-    //    private bool isThereAReport;
-    //    private int currentPossition;
-
-    //    private int possUp;
-    //    private int possDown;
-
-    //    public OnEditCustomerEventArgs()
-    //    {
-
-    //    }
-
-    //    public OnEditCustomerEventArgs(bool isThereANewCharge, bool isThereALateBill, bool isThereAReport, int currentPossition)
-    //    {
-    //        this.IsThereANewCharge = isThereANewCharge;
-    //        this.IsThereALateBill = isThereALateBill;
-    //        this.IsThereAReport = isThereAReport;
-    //        this.CurrentPossition = currentPossition;
-    //    }
-
-    //    public bool IsThereANewCharge { get => isThereANewCharge; set => isThereANewCharge = value; }
-    //    public bool IsThereALateBill { get => isThereALateBill; set => isThereALateBill = value; }
-    //    public bool IsThereAReport { get => isThereAReport; set => isThereAReport = value; }
-    //    public int CurrentPossition { get => currentPossition; set => currentPossition = value; }
-
-    //    public int PossUp { get => possUp; set => possUp = value; }
-    //    public int PossDown { get => possDown; set => possDown = value; }
-
-    //}
-
+   
     internal class EmployeesTableViewSource : UITableViewSource
     {
+        //public UILabel MFullUpdateText { get => mFullUpdateDateText; set => mFullUpdateDateText = value; }
 
         private static string mDocuments = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
         private string mFilename = Path.Combine(mDocuments, "Customers.txt");
@@ -55,7 +24,7 @@ namespace VikRuse
         private ViewController mViewController;   
         private UINavigationController navController;
 
-        private List<Customer> mCustomers;
+     //   private List<Customer> mCustomers;
         //private UIButton mDel;
         //private UIButton mEdit;
 
@@ -140,6 +109,17 @@ namespace VikRuse
                  File.WriteAllText(mFilename, listOfCustomersAsJson);
 
                  tableView.ReloadData();
+
+                 if (mEmployees.Count == 0)
+                 {
+                    
+                     InvokeOnMainThread(() =>
+                     {
+
+                         mViewController.MFullUpdateText.Text = "Моля добавете абонати";
+                     }
+                     );                   
+                 }
              }));
 
              confirmCustomerDelete.AddAction(UIAlertAction.Create("Cancel", UIAlertActionStyle.Cancel, alert => this.Dispose()));
@@ -214,55 +194,11 @@ namespace VikRuse
 
             };
 
-
-            //cell.EditBtn.TouchUpInside += (sender, e) =>
-            //{
-            //    var row = ((UIButton)sender).Tag;
-            //    Customer currentCustomer = mEmployees[indexPath.Row];
-
-            //    var fragmentController = mStoryBoard.InstantiateViewController("DetailView");
-
-            //    fragmentController.ModalPresentationStyle = UIModalPresentationStyle.OverCurrentContext;
-            //    mViewController.PresentViewController(fragmentController, true, null);
-            //    //this.navController.PushViewController(fragmentController, true);
-
-            //    // tableView.ReloadData();
-            //};
-
-            //   cell.UpdateCell(currentEmployee);
-
             return cell;
-
-
-
-            //var width = tableView.ParentView.Width;
-            //var height = tableView.RenderHeight;
-
-            //var rect = new CGRect(cell.Bounds.X, cell.Bounds.Y, (nfloat)width, (nfloat)height);
-
-            //var gradient = new CAGradientLayer
-            //{
-            //    Colors = new[] { UIColor.White.CGColor, UIColor.FromWhiteAlpha((nfloat)0.9, (nfloat)1.0).CGColor },
-            //    Frame = rect
-            //};
-            //cell.Layer.InsertSublayer(gradient, 0);
-
-
-            //cell.SeparatorInset = UIEdgeInsets.Zero;
-            //tableView.SeparatorStyle = UITableViewCellStyle.Default;
-
-
-            //cell.Layer.BorderWidth = 2.0f;
-            //cell.Layer.BorderColor = UIColor.Gray.CGColor;
-
-            //  return cell;
 
         }
 
-        //private void DetailViewController_OnEditCustomerComplete(object sender, OnEditCustomerEventArgs e)
-        //{
-            
-        //}
+   
 
         public override nint RowsInSection(UITableView tableview, nint section)
         {

@@ -49,10 +49,6 @@ namespace VikRuse
         [GeneratedCode ("iOS Designer", "1.0")]
         partial void RefreshBtn_Activated (UIKit.UIBarButtonItem sender);
 
-        [Action ("SetnNotification:")]
-        [GeneratedCode ("iOS Designer", "1.0")]
-        partial void SetnNotification (UIKit.UIButton sender);
-
         void ReleaseDesignerOutlets ()
         {
             if (AddCustomer != null) {

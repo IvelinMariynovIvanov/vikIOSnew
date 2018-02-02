@@ -54,8 +54,8 @@ namespace VikRuse
         //private bool mLateCharge;
         //private bool mReport;
 
-        private UIButton mEdit;
-        private UIButton mCancel;
+     //   private UIButton mEdit;
+      //  private UIButton mCancel;
 
        // public int mPossUp;   //imageview
       //  public int mPossDown;
@@ -117,14 +117,6 @@ namespace VikRuse
 
             base.ViewDidLoad();
 
-            //mPossUp.SetImage(UIImage.FromFile("up.png"), UIControlState.Normal);
-
-            //mPossDown.SetImage(UIImage.FromFile("down.png"), UIControlState.Normal);
-
-            //mNewCharge = new UISwitch();
-            //mLateCharge = new UISwitch();
-            //mReport = new UISwitch();
-
             View.BackgroundColor = UIColor.Black.ColorWithAlpha(0.3f);
             View.Opaque = false;
 
@@ -144,12 +136,6 @@ namespace VikRuse
                 mCustomers = new List<Customer>();
             }
 
-
-
-            //  #region check Ckeckbox Status
-
-            //  ChechSwitchStatus();
-            // #endregion
 
             ChechSwitchStatus();
 
@@ -323,25 +309,6 @@ namespace VikRuse
 
             DismissViewController(true, null);
 
-            //var currentCustomer = mCustomers[MCurrentPosition];
-
-            //currentCustomer.NotifyNewInvoice = this.MIsNewCharge;
-            //currentCustomer.NotifyInvoiceOverdue = this.MIsLateCharge;
-            //currentCustomer.NotifyReading = this.MIsReport;
-
-            //Customer updateCustomer = mCustomers[MCurrentPosition];
-
-            //updateCustomer.NotifyNewInvoice = this.MIsNewCharge;
-            //updateCustomer.NotifyInvoiceOverdue = this.MIsLateCharge;
-            //updateCustomer.NotifyReading = this.MIsReport;
-
-
-
-            //mCustomers.RemoveAt(MCurrentPosition); //new count -1
-            //mCustomers.Insert(MCurrentPosition, updateCustomer); // put in the same posstion
-
-            //var listOfCustomersAsJson = JsonConvert.SerializeObject(this.mCustomers);
-            //File.WriteAllText(mFilename, listOfCustomersAsJson);
         }
     }
 }

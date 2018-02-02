@@ -16,12 +16,14 @@ namespace VikRuse
     [Register("AppDelegate")]
     public class AppDelegate : UIApplicationDelegate
     {
-        private string categoryID;
+       // private string categoryID;
 
         private static System.Timers.Timer aTimer;
 
-        private List<Customer> mGetCustomersFromDbToNotify;  //only with 5 properties which are needed for sending to api
+       // private List<Customer> mGetCustomersFromDbToNotify;  
         private List<Customer> mCustomers = new List<Customer>();
+
+        private List<Customer> mTempFetchCollection = new List<Customer>();
 
         private List<Customer> mCustomerFromApiToNotifyToday = new List<Customer>();
         private List<Customer> mCountНotifyReadingustomers = new List<Customer>();
@@ -55,9 +57,41 @@ namespace VikRuse
         {
             UIApplication.SharedApplication.SetMinimumBackgroundFetchInterval(MINIMUM_BACKGROUND_FETCH_INTERVAL);
         }
+        public override void PerformFetch(UIApplication application, Action<UIBackgroundFetchResult> completionHandler)
+        {
+            // Do Background Fetch
+            var downloadSuccessful = false;
 
+            try
+            {
+                // Download data
+                //    await Client.Instance.BeerDrinkinClient.RefreshAll();
+
+                AllJobDoneInService();
+
+                downloadSuccessful = true;
+            }
+            catch (Exception )
+            {
+                //Insights.Report(ex);
+                completionHandler(UIBackgroundFetchResult.Failed);
+            }
+
+            if (downloadSuccessful)
+            {
+                completionHandler(UIBackgroundFetchResult.NewData);
+            }
+            else
+            {
+                completionHandler(UIBackgroundFetchResult.NoData);
+            }
+        }
         public override void OnResignActivation(UIApplication application)
         {
+            //when the user quits the application 
+
+            
+
             // Invoked when the application is about to move from active to inactive state.
             // This can occur for certain types of temporary interruptions (such as an incoming phone call or SMS message) 
             // or when the user quits the application and it begins the transition to the background state.
@@ -69,11 +103,11 @@ namespace VikRuse
             // Use this method to release shared resources, save user data, invalidate timers and store the application state.
             // If your application supports background exection this method is called instead of WillTerminate when the user quits.
 
-            //if (aTimer == null)
-            //{
-            //    StartTimer();
+            if (aTimer == null)
+            {
+                StartTimer();
 
-            //}
+            }
         }
 
         public override void WillEnterForeground(UIApplication application)
@@ -81,11 +115,11 @@ namespace VikRuse
             // Called as part of the transiton from background to active state.
             // Here you can undo many of the changes made on entering the background.
 
-            ViewController mainScreeen = new ViewController();
-
-            mainScreeen.ViewDidLoad();
 
 
+            //ViewController mainScreeen = new ViewController();
+
+            //mainScreeen.ViewDidLoad();
 
         }
 
@@ -103,6 +137,12 @@ namespace VikRuse
         public override void WillTerminate(UIApplication application)
         {
             // Called when the application is about to terminate. Save data, if needed. See also DidEnterBackground.
+
+            if (aTimer == null)
+            {
+                StartTimer();
+
+            }
         }
 
         public override bool FinishedLaunching(UIApplication application, NSDictionary launchOptions)
@@ -110,31 +150,8 @@ namespace VikRuse
             // Override point for customization after application launch.
             // If not required for your application you can safely delete this method
 
-            //UIApplication.SharedApplication.SetMinimumBackgroundFetchInterval(UIApplication.BackgroundFetchIntervalMinimum);
-
-            UIApplication.SharedApplication.SetMinimumBackgroundFetchInterval(30);
-
-            //// Request notification permissions from the user
-            //UNUserNotificationCenter.Current.RequestAuthorization(UNAuthorizationOptions.Alert, (approved, err) =>
-            //{
-            //    // Handle approval
-            //});
-
-            //// Watch for notifications while the app is active
-            //UNUserNotificationCenter.Current.Delegate = new UserNotificationCenterDelegate();
-
-            // return true;
-
-
-            //RegisterForNotifications();
-            //ScheduleNotification();
-            ////more code
-            ////  return base.FinishedLaunching(application, launchOptions);
-
-            //return true;
-
-
-
+            UIApplication.SharedApplication.SetMinimumBackgroundFetchInterval(3600);
+   
             if (UIDevice.CurrentDevice.CheckSystemVersion(10, 0))
             {
                 // Ask the user for permission to get notifications on iOS 10.0+
@@ -170,7 +187,8 @@ namespace VikRuse
         {
             // Create a timer and set a two second interval.
             aTimer = new System.Timers.Timer();
-            aTimer.Interval = 60000;   /// 10 sec
+
+            aTimer.Interval = 3600000;   /// 10 sec  ////3600000
 
             // Hook up the Elapsed event for the timer. 
             aTimer.Elapsed += OnTimedEvent;
@@ -195,17 +213,11 @@ namespace VikRuse
 
         private void AllJobDoneInService()
         {
-            //mCountНotifyReadingustomers = new List<Customer>();
-            //mCountНotifyInvoiceOverdueCustomers = new List<Customer>();
-            //mCountNewНotifyNewInvoiceCustomers = new List<Customer>();
-
-            //mCustomerFromApiToNotifyToday = new List<Customer>();
+           
 
             mCustomers = new List<Customer>();
             mAllUpdateCustomerFromApi = new List<Customer>();
-
-            // get customers
-            // mCustomers = GetCustomersFromPreferences();
+            mTempFetchCollection = new List<Customer>();
 
             GetCustomersFromPreferences();
 
@@ -220,6 +232,11 @@ namespace VikRuse
             {
                 CheckIfThereisAnewMessageFromApi(connectToApi);
 
+                foreach (var item in mCustomers)
+                {
+                    mTempFetchCollection.Add(item);
+                }
+
                 foreach (var customer in mCustomers)
                 {
                     bool isReceiveNotifyNewInvoiceCheck = false;
@@ -232,7 +249,6 @@ namespace VikRuse
 
 
                     EncryptConnection encryp = new EncryptConnection();
-
 
                     string crypFinalPass = encryp.Encrypt();
 
@@ -251,8 +267,8 @@ namespace VikRuse
                     //string realUrl = ConnectToApi.urlAPI + "api/abonats/" + crypFinalPass + "/" + billNumber + "/" + egn;
 
                     string realUrl = ConnectToApi.urlAPI + "api/abonats/" + crypFinalPass + "/" + billNumber + "/" + egn + "/"
-                                   + ConnectToApi.updateByAutoService + "/";
-                                  // + isReceiveNotifyNewInvoiceCheck + "/" + isReceiveNotifyInvoiceOverdueCheck + "/" + isReciveNotifyReadingCheck + "/";
+                                   + ConnectToApi.updateByAutoService + "/"
+                                   + isReceiveNotifyNewInvoiceCheck + "/" + isReceiveNotifyInvoiceOverdueCheck + "/" + isReciveNotifyReadingCheck + "/";
 
                     //string realUrl = "http://192.168.2.222/VIKWebApi/" + "api/abonats/"
                     //   + crypFinalPass + "/" + billNumber + "/" + egn + "/" + ConnectToApi.updateByAutoService + "/"
@@ -260,15 +276,19 @@ namespace VikRuse
 
                     var jsonResponse = connectToApi.FetchApiDataAsync(realUrl); //FetchApiDataAsync(realUrl);
 
+                    mTempFetchCollection.Remove(customer);
+                    
                     //check the api
                     if (jsonResponse == null)
                     {
-                        return;
+                        mAllUpdateCustomerFromApi.Add(customer);
+                        //return;
                     }
                     // check in vikSite is there a customer with this billNumber (is billNumber correct)
                     else if (jsonResponse == "[]")
                     {
-                        return;  ////
+                        mAllUpdateCustomerFromApi.Add(customer);
+                        //return;  ////
 
                     }
 
@@ -290,7 +310,7 @@ namespace VikRuse
 
                         else
                         {
-                            return;
+                            mAllUpdateCustomerFromApi.Add(customer);
                         }
                     }
                 }
@@ -469,7 +489,7 @@ namespace VikRuse
                 // Create content
                 var content = new UNMutableNotificationContent();
 
-                content.Title = "Нова Просрочване";
+                content.Title = "Просрочване";
 
                 List<string> notificationContent = new List<string>();
 
@@ -597,9 +617,9 @@ namespace VikRuse
         {
             foreach (var customer in mAllUpdateCustomerFromApi)   //// mCustomerFromApiToNotifyToday
             {
-            //    customer.ReceiveNotifyInvoiceOverdueToday = true;
-            //    customer.ReceiveNotifyNewInvoiceToday = true;
-            //    customer.ReciveNotifyReadingToday = true;
+                //customer.ReceiveNotifyInvoiceOverdueToday = true;
+                //customer.ReceiveNotifyNewInvoiceToday = true;
+                //customer.ReciveNotifyReadingToday = true;
 
                 //// isAnyNotifycationCheck
                 bool haveToRecieveNotificationToday =
@@ -698,7 +718,7 @@ namespace VikRuse
                     mCustomers = new List<Customer>();
                 }
             }
-            catch (Exception e)
+            catch (Exception )
             {
                 if (listOfCustomersAsJsonString == null)
                 {
@@ -715,95 +735,6 @@ namespace VikRuse
                 }
             }
         }
-
-        public override void PerformFetch(UIApplication application, Action<UIBackgroundFetchResult> completionHandler)
-        {
-            // Do Background Fetch
-            var downloadSuccessful = false;
-
-            try
-            {
-                // Download data
-            //    await Client.Instance.BeerDrinkinClient.RefreshAll();
-                downloadSuccessful = true;
-            }
-            catch (Exception ex)
-            {
-                //Insights.Report(ex);
-            }
-
-            if (downloadSuccessful)
-            {
-                completionHandler(UIBackgroundFetchResult.NewData);
-            }
-            else
-            {
-                completionHandler(UIBackgroundFetchResult.Failed);
-            }
-        }
-
-        void RegisterForNotifications()
-        {
-            // Create action
-            var actionID = "check";
-            var title = "Check";
-            var action = UNNotificationAction.FromIdentifier(actionID, title, UNNotificationActionOptions.Foreground);
-
-            // Create category
-            categoryID = "notification";
-            var actions = new UNNotificationAction[] { };
-            var intentIDs = new string[] { };
-            //var categoryOptions = new UNNotificationCategoryOptions[] { };
-            var category = UNNotificationCategory.FromIdentifier(categoryID, actions, intentIDs, UNNotificationCategoryOptions.None);
-
-            // Register category
-            var categories = new UNNotificationCategory[] { category };
-            UNUserNotificationCenter.Current.SetNotificationCategories(new NSSet<UNNotificationCategory>(categories));
-
-            UNUserNotificationCenter.Current.RequestAuthorization(UNAuthorizationOptions.Alert|UNAuthorizationOptions.Badge| UNAuthorizationOptions.Sound,
-            (a, err) => 
-            {
-             //TODO handle error
-            });
-        }
-
-        void ScheduleNotification()
-        {
-            // Create content
-            var content = new UNMutableNotificationContent();
-            content.Title = "Title";
-            content.Subtitle = "Subtitle";
-            content.Body = "Body";
-            content.Badge = 1;
-            content.CategoryIdentifier = categoryID;
-            content.Sound = UNNotificationSound.Default;
-
-            // Fire trigger in one seconds
-            var trigger = UNTimeIntervalNotificationTrigger.CreateTrigger(1, false);
-
-            var requestID = "notificationRequest";
-            var request = UNNotificationRequest.FromIdentifier(requestID, content, trigger);
-
-            //Here I set the Delegate to handle the user tapping on notification
-         //   UNUserNotificationCenter.Current.Delegate = new UserNotificationCenterDelegate();
-
-            UNUserNotificationCenter.Current.AddNotificationRequest(request, (err) => {
-                if (err != null)
-                {
-                    // Report error
-                    System.Console.WriteLine("Error: {0}", err);
-                }
-                else
-                {
-                    // Report Success
-                    System.Console.WriteLine("Notification Scheduled: {0}", request);
-                }
-            });
-        }
-
-
-      
-
-       
+ 
     }
 }

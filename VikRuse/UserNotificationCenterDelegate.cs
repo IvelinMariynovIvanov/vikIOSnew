@@ -60,56 +60,11 @@ namespace VikRuse
         {
 
 
-            //base.DidReceiveNotificationResponse(center, response, completionHandler);
-
-            // Handle notification tap here
-
-            //string userNotificationDelegateAsJSON = File.ReadAllText(mNotificationFileName);
-
-         //   mNotification = JsonConvert.DeserializeObject<UserNotificationCenterDelegate>(userNotificationDelegateAsJSON);
-
-
-            /////////////////
-            //   GetNotificationSavedInPhone();
-
-            //mStoryboard = mNotification.mStoryboard;
-
-            //mNavigationController = mNotification.mNavigationController;
-
-
-            //var mainActivitiy = mStoryboard.InstantiateViewController("ViewController");
-            //this.mNavigationController.PushViewController(mainActivitiy, true);
-
-
-            //ViewController navController = new ViewController();
-
-            //mStoryboard = navController.MStoryboard;
-
-            //mNavigationController = navController.MNavigationController;
-
-            //navController.OnTapNotificationPressed += (object sender, OnTapNotificationCustomEventArgs e) =>
-            //{
-            //    mStoryboard = e.MStoryboard;
-
-            //    mNavigationController = e.MNavigationController;
-
-            //    //var mainActivitiy = mStoryboard.InstantiateViewController("ViewController");
-            //    //this.mNavigationController.PushViewController(mainActivitiy, true);
-
-            //};
-
-
             if (OnTapNotificationPressed != null)
             {
                 OnTapNotificationPressed.Invoke
                     (this, new OnTapNotificationCustomEventArgs(mStoryboard, mNavigationController));
             }
-
-
-
-            //var mainActivitiy = mStoryboard.InstantiateViewController("ViewController");   // mStoryboard
-            //this.mNavigationController.PushViewController(mainActivitiy, true);
-
 
             // Take action based on Action ID
             switch (response.ActionIdentifier)
@@ -122,10 +77,6 @@ namespace VikRuse
                     if (response.IsDefaultAction)
                     {
                         // Handle default action...
-
-
-                        //var mainActivitiy = .InstantiateViewController("ViewController");
-                        //this.NavigationController.PushViewController(mainActivitiy, true);
 
                         DateTime updateHourAndDate = DateTime.Now;
 
@@ -176,7 +127,7 @@ namespace VikRuse
                     mNotificationList = new List<UserNotificationCenterDelegate>();
                 }
             }
-            catch (Exception e)
+            catch (Exception )
             {
                 if (userNotificationDelegateAsJSON == null)
                 {
@@ -201,7 +152,7 @@ namespace VikRuse
         public override void WillPresentNotification(UNUserNotificationCenter center, UNNotification notification, Action<UNNotificationPresentationOptions> completionHandler)
         {
             // Do something with the notification
-            // Console.WriteLine("Active Notification: {0}", notification);
+
 
             // Tell system to display the notification anyway or use
             // `None` to say we have handled the display locally.

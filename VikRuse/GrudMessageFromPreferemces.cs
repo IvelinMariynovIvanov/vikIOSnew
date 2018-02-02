@@ -10,7 +10,7 @@ using Newtonsoft.Json;
 
 namespace VikRuse
 {
-  public class GrudMessageFromPreferemces
+    public class GrudMessageFromPreferemces
     {
         private static string mDocuments = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
         private string mMessageFilename = Path.Combine(mDocuments, "MessageFromApi.txt");
@@ -24,7 +24,7 @@ namespace VikRuse
             try
             {
                 messageAsString = File.ReadAllText(mMessageFilename);
-                
+
 
                 if (messageAsString == null || messageAsString == string.Empty)
                 {
@@ -33,7 +33,7 @@ namespace VikRuse
                 else
                 {
                     var message = JsonConvert.DeserializeObject<Message>(messageAsString);
-                  
+
                 }
 
                 if (message == null)
@@ -41,7 +41,7 @@ namespace VikRuse
                     message = new Message();
                 }
             }
-            catch (Exception e)
+            catch (Exception )
             {
 
                 if (messageAsString == null || messageAsString == string.Empty)

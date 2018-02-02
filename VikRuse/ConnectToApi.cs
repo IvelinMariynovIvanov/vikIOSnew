@@ -17,7 +17,7 @@ namespace VikRuse
         //  public static string urlAPI = "http://vik-ruse.com:8080/";
 
         public static string urlAPI = "http://87.120.225.253:8080/";
-        
+
         public static string sentSignal = "http://192.168.2.222/VIKWebApi/api/postimage";
 
         public static int updateByButtonRefresh = 1;
@@ -57,7 +57,7 @@ namespace VikRuse
 
                 return newCustomer;
             }
-            catch (Exception e)
+            catch (Exception )
             {
                 return null;
             }
@@ -90,7 +90,7 @@ namespace VikRuse
 
                 jsonDoc = result;
             }
-            catch (Exception ex)
+            catch (Exception )
             {
                 return null;
             }
@@ -122,7 +122,7 @@ namespace VikRuse
                 }
 
             }
-            catch (Exception e)
+            catch (Exception )
             {
                 result = false;
             }
