@@ -13,7 +13,6 @@ namespace VikRuse
    
     internal class EmployeesTableViewSource : UITableViewSource
     {
-        //public UILabel MFullUpdateText { get => mFullUpdateDateText; set => mFullUpdateDateText = value; }
 
         private static string mDocuments = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
         private string mFilename = Path.Combine(mDocuments, "Customers.txt");
@@ -24,33 +23,31 @@ namespace VikRuse
         private ViewController mViewController;   
         private UINavigationController navController;
 
-     //   private List<Customer> mCustomers;
-        //private UIButton mDel;
-        //private UIButton mEdit;
 
-
-
-        public EmployeesTableViewSource(List<Customer> employees, UIStoryboard storyBoard, ViewController viewController, UINavigationController navController) //, UIButton delete, UIButton edit)
+        public EmployeesTableViewSource(List<Customer> employees, UIStoryboard storyBoard, ViewController viewController, UINavigationController navController) 
         {
             this.mEmployees = employees;
             this.mStoryBoard = storyBoard;
             this.mViewController = viewController;
             this.navController = navController;
-            //this.mDel = delete;
-            //this.mEdit = edit;
         }
-
+        
+  
         public EmployeesTableViewSource(List<Customer> mEmployees)
         {
             this.mEmployees = mEmployees;
         }
 
-        
-
+        /// <summary>
+        /// This method swipe and delete row
+        /// </summary>
+        /// <param name="tableView"></param>
+        /// <param name="editingStyle"></param>
+        /// <param name="indexPath"></param>
         //public override void CommitEditingStyle(UITableView tableView, UITableViewCellEditingStyle editingStyle, NSIndexPath indexPath)
         //{
 
-        //  //  base.CommitEditingStyle(tableView, editingStyle, indexPath);
+        //    //  base.CommitEditingStyle(tableView, editingStyle, indexPath);
 
 
         //    switch (editingStyle)
@@ -67,7 +64,7 @@ namespace VikRuse
 
         //            File.WriteAllText(mFilename, listOfCustomersAsJson);
 
-        //            break;   
+        //            break;
         //    }
         //}
 
@@ -126,19 +123,16 @@ namespace VikRuse
 
              //Present Alert
              navController.PresentViewController(confirmCustomerDelete, true, null);
-             
 
-              
+                if (mEmployees.Count == 0)
+                {
+                    this.mViewController.MFullUpdateText.Text = "Моля добавете абонати";
+                    //ViewController mainScreeen = this.mStoryBoard.InstantiateViewController("ViewController") as ViewController;
 
-                //if (mEmployees.Count == 0)
-                //{
-                //    this.mViewController.MFullUpdateText.Text = "Моля добавете абонати";
-                //    //ViewController mainScreeen = this.mStoryBoard.InstantiateViewController("ViewController") as ViewController;
+                    //// mainScreeen.MFullUpdateText.Text = "Моля добавете абонати";
+                    //navController.PushViewController(mainScreeen, true);
 
-                //    //// mainScreeen.MFullUpdateText.Text = "Моля добавете абонати";
-                //    //navController.PushViewController(mainScreeen, true);
-
-                //}
+                }
 
             };
 
