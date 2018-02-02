@@ -124,16 +124,6 @@ namespace VikRuse
              //Present Alert
              navController.PresentViewController(confirmCustomerDelete, true, null);
 
-                if (mEmployees.Count == 0)
-                {
-                    this.mViewController.MFullUpdateText.Text = "Моля добавете абонати";
-                    //ViewController mainScreeen = this.mStoryBoard.InstantiateViewController("ViewController") as ViewController;
-
-                    //// mainScreeen.MFullUpdateText.Text = "Моля добавете абонати";
-                    //navController.PushViewController(mainScreeen, true);
-
-                }
-
             };
 
             cell.EditBtn.TouchUpInside += (sender, e) =>
